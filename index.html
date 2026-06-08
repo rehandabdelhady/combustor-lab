@@ -1,155 +1,451 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lab-Scale Gas Turbine Digital Twin</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<title>3D Combustor Digital Twin</title>
+<style>
+body{
+  margin:0;
+  overflow:hidden;
+  background:#020617;
+  font-family:Arial,sans-serif;
+  color:white;
+}
+
+#ui{
+  position:absolute;
+  top:20px;
+  left:20px;
+  z-index:10;
+  width:310px;
+  background:rgba(2,6,23,.8);
+  border:1px solid #38bdf8;
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 0 25px rgba(56,189,248,.35);
+}
+
+h1{
+  margin:0 0 8px;
+  font-size:20px;
+  color:#e0f2fe;
+}
+
+#status{
+  color:#22c55e;
+  font-weight:bold;
+  letter-spacing:2px;
+  margin-bottom:14px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:1px solid #38bdf8;
+  background:#082f49;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#0369a1;
+}
+
+.reading{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px solid rgba(148,163,184,.25);
+}
+
+.reading span{
+  color:#94a3b8;
+}
+
+.reading b{
+  color:#67e8f9;
+}
+
+#hint{
+  position:absolute;
+  right:20px;
+  bottom:20px;
+  color:#94a3b8;
+  font-size:13px;
+}
+</style>
 </head>
 
 <body>
-  <main class="app">
-    <header class="hero">
-      <p class="eyebrow">SOLIDWORKS ASSEMBLY · DIGITAL TWIN · DUAL FUEL</p>
-      <h1>Lab-Scale Gas Turbine Engine</h1>
-      <p id="systemStatus" class="system-status">SYSTEM STANDBY</p>
-    </header>
 
-    <section class="dashboard">
-      <section class="scene-card">
-        <div class="scene-header">
-          <span>LIVE 3D-STYLE ASSEMBLY</span>
-          <span id="runMode">OFFLINE</span>
-        </div>
+<div id="ui">
+  <h1>3D Lab-Scale Gas Turbine</h1>
+  <div id="status">SYSTEM STANDBY</div>
 
-        <div class="rig">
+  <button onclick="nextStep()">START NEXT SYSTEM</button>
+  <button onclick="autoRun()">AUTO IGNITION</button>
+  <button onclick="shutdown()">SHUTDOWN</button>
 
-          <div class="base"></div>
+  <div class="reading"><span>Temperature</span><b id="temp">300 K</b></div>
+  <div class="reading"><span>Pressure</span><b id="pressure">0.0 bar</b></div>
+  <div class="reading"><span>Air Flow</span><b id="flow">0.00 kg/s</b></div>
+  <div class="reading"><span>Efficiency</span><b id="eff">--</b></div>
+</div>
 
-          <div class="module blower-module" data-label="BLOWER">
-            <div id="fan" class="fan">
-              <span></span><span></span><span></span><span></span>
-            </div>
-          </div>
+<div id="hint">Drag mouse to rotate · Scroll to zoom</div>
 
-          <div class="coupler c1"></div>
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
-          <div class="module preheater-module" data-label="PREHEATER">
-            <div id="heaterGlow" class="heater-glow"></div>
-            <div class="coil"></div>
-            <div class="mesh"></div>
-          </div>
+let step = 0;
+let autoTimer = null;
 
-          <div class="coupler c2"></div>
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020617);
 
-          <div class="module chamber-module" data-label="TRANSPARENT COMBUSTION CHAMBER">
-            <div class="liner"></div>
-            <div class="holes"></div>
-            <div id="spark" class="spark"></div>
-            <div id="flame" class="flame"></div>
-          </div>
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 1000);
+camera.position.set(8, 4, 8);
 
-          <div class="coupler c3"></div>
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
 
-          <div class="module nozzle-module" data-label="NOZZLE"></div>
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.target.set(0, 0.8, 0);
 
-          <div id="airFlow" class="flow air-flow"></div>
-          <div id="h2Flow" class="flow h2-flow"></div>
-          <div id="keroFlow" class="flow kero-flow"></div>
-          <div id="exhaustFlow" class="flow exhaust-flow"></div>
+const hemi = new THREE.HemisphereLight(0xffffff, 0x111827, 1.2);
+scene.add(hemi);
 
-          <div class="tank air-tank">AIR</div>
-          <div class="tank h2-tank">H₂</div>
-          <div class="tank kero-tank">KEROSENE</div>
+const keyLight = new THREE.DirectionalLight(0xffffff, 2);
+keyLight.position.set(5, 8, 5);
+keyLight.castShadow = true;
+scene.add(keyLight);
 
-          <div class="pipe air-pipe"></div>
-          <div class="pipe h2-pipe"></div>
-          <div class="pipe kero-pipe"></div>
+const blueLight = new THREE.PointLight(0x38bdf8, 3, 12);
+blueLight.position.set(-3, 3, 2);
+scene.add(blueLight);
 
-          <div id="daqBox" class="daq-box">
-            <span>DAQ</span>
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
+const flameLight = new THREE.PointLight(0xff7a00, 0, 8);
+flameLight.position.set(1.2, 1.2, 0);
+scene.add(flameLight);
 
-        </div>
-      </section>
+const metal = new THREE.MeshStandardMaterial({
+  color:0x9ca3af,
+  metalness:.75,
+  roughness:.25
+});
 
-      <aside class="side-panel">
-        <div class="panel">
-          <h2>Startup Sequence</h2>
+const darkMetal = new THREE.MeshStandardMaterial({
+  color:0x1f2937,
+  metalness:.8,
+  roughness:.35
+});
 
-          <button onclick="nextStep()" class="primary-btn">START NEXT SYSTEM</button>
-          <button onclick="autoRun()" class="secondary-btn">AUTO IGNITION</button>
-          <button onclick="shutdown()" class="danger-btn">SHUTDOWN</button>
+const glass = new THREE.MeshPhysicalMaterial({
+  color:0xdbeafe,
+  transparent:true,
+  opacity:.25,
+  roughness:.05,
+  metalness:0,
+  transmission:.5,
+  clearcoat:1
+});
 
-          <div class="steps">
-            <div id="step1">1 · Blower</div>
-            <div id="step2">2 · Preheater</div>
-            <div id="step3">3 · Hydrogen</div>
-            <div id="step4">4 · Kerosene</div>
-            <div id="step5">5 · Ignition</div>
-            <div id="step6">6 · Full Run</div>
-          </div>
-        </div>
+const blue = new THREE.MeshStandardMaterial({ color:0x0284c7, metalness:.55, roughness:.25 });
+const red = new THREE.MeshStandardMaterial({ color:0xdc2626, metalness:.4, roughness:.35 });
+const yellow = new THREE.MeshStandardMaterial({ color:0xfacc15, metalness:.35, roughness:.35 });
+const orangeGlow = new THREE.MeshBasicMaterial({ color:0xff7a00, transparent:true, opacity:.0 });
+const flameMat = new THREE.MeshBasicMaterial({ color:0xff7a00, transparent:true, opacity:0 });
 
-        <div class="panel">
-          <h2>Live Readings</h2>
+function cylinder(radius, depth, mat, x, y, z, rotZ = Math.PI / 2){
+  const geo = new THREE.CylinderGeometry(radius, radius, depth, 64);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.z = rotZ;
+  mesh.position.set(x,y,z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
 
-          <div class="reading">
-            <span>Temperature</span>
-            <b id="temp">300 K</b>
-          </div>
+function box(w,h,d,mat,x,y,z){
+  const geo = new THREE.BoxGeometry(w,h,d);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x,y,z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
 
-          <div class="reading">
-            <span>Pressure</span>
-            <b id="pressure">0.0 bar</b>
-          </div>
+function sphere(r,mat,x,y,z){
+  const geo = new THREE.SphereGeometry(r,48,32);
+  const mesh = new THREE.Mesh(geo,mat);
+  mesh.position.set(x,y,z);
+  mesh.castShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
 
-          <div class="reading">
-            <span>Air Flow</span>
-            <b id="air">0 kg/s</b>
-          </div>
+function cone(r1,r2,h,mat,x,y,z){
+  const geo = new THREE.CylinderGeometry(r1,r2,h,64);
+  const mesh = new THREE.Mesh(geo,mat);
+  mesh.rotation.z = Math.PI / 2;
+  mesh.position.set(x,y,z);
+  mesh.castShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
 
-          <div class="reading">
-            <span>Efficiency</span>
-            <b id="eff">--</b>
-          </div>
-        </div>
+/* base */
+box(9.5,.18,1.3,darkMetal,0,.05,0);
+for(let i=-4;i<=4;i+=2){
+  box(.12,.9,.12,darkMetal,i,.48,-.55);
+  box(.12,.9,.12,darkMetal,i,.48,.55);
+}
 
-        <div class="panel alarm-panel">
-          <h2>Safety System</h2>
-          <p id="alarm">No active alarms</p>
-        </div>
-      </aside>
-    </section>
+/* main assembly */
+const blower = cylinder(.72,.95,blue,-3.8,1,0);
+const blowerRing = cylinder(.83,.1,darkMetal,-3.25,1,0);
 
-    <section class="bottom-grid">
-      <div class="panel">
-        <h2>P&ID View</h2>
-        <div class="pid">
-          <span>AIR</span><i></i><span>FILTER</span><i></i><span>REG</span><i></i><span>MIXER</span><i></i><span>CHAMBER</span><i></i><span>NOZZLE</span>
-        </div>
-      </div>
+const fanGroup = new THREE.Group();
+scene.add(fanGroup);
+fanGroup.position.set(-3.8,1,0);
+for(let i=0;i<6;i++){
+  const blade = box(.12,.55,.04,new THREE.MeshStandardMaterial({color:0x7dd3fc,metalness:.5}),0,.22,0);
+  blade.rotation.z = i * Math.PI / 3;
+  fanGroup.add(blade);
+}
 
-      <div class="panel">
-        <h2>Combustion Zones</h2>
-        <div class="zones">
-          <div>PRIMARY<br><small>Ignition</small></div>
-          <div>SECONDARY<br><small>Burning</small></div>
-          <div>DILUTION<br><small>Cooling</small></div>
-        </div>
-      </div>
+const preheater = cylinder(.62,1.55,glass,-1.85,1,0);
+const preGlow = cylinder(.5,1.35,orangeGlow,-1.85,1,0);
 
-      <div class="panel">
-        <h2>Fuel Blend</h2>
-        <input id="blend" type="range" min="0" max="50" value="20" step="5" oninput="updateBlend()" />
-        <p><span id="blendText">20</span>% Hydrogen · <span id="keroText">80</span>% Kerosene</p>
-      </div>
-    </section>
-  </main>
+for(let i=-.55;i<=.55;i+=.18){
+  const coil = new THREE.Mesh(
+    new THREE.TorusGeometry(.52,.018,12,80),
+    new THREE.MeshBasicMaterial({color:0xff7a00})
+  );
+  coil.rotation.y = Math.PI / 2;
+  coil.position.set(-1.85+i,1,0);
+  scene.add(coil);
+}
 
-  <script src="script.js"></script>
+const chamber = cylinder(.7,2.55,glass,.65,1,0);
+const liner = cylinder(.48,2.3,new THREE.MeshStandardMaterial({
+  color:0x475569,
+  metalness:.65,
+  roughness:.3,
+  transparent:true,
+  opacity:.45
+}),.65,1,0);
+
+for(let x=-.35;x<=1.65;x+=.22){
+  for(let a=0;a<Math.PI*2;a+=Math.PI/4){
+    const hole = sphere(.025,new THREE.MeshBasicMaterial({color:0x0f172a}),x,1+Math.cos(a)*.5,Math.sin(a)*.5);
+  }
+}
+
+const nozzle = cone(.55,.2,1.25,metal,2.8,1,0);
+
+const couplers = [-2.75,-.95,1.95];
+couplers.forEach(x=>{
+  cylinder(.78,.13,darkMetal,x,1,0);
+  cylinder(.86,.04,metal,x-.08,1,0);
+  cylinder(.86,.04,metal,x+.08,1,0);
+});
+
+/* tanks */
+cylinder(.35,.8,blue,-3.4,.45,-2.2,0);
+cylinder(.35,.8,red,-2.4,.45,-2.2,0);
+cylinder(.35,.8,yellow,-1.4,.45,-2.2,0);
+
+/* pipes */
+function pipe(points,color){
+  const curve = new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
+  const geo = new THREE.TubeGeometry(curve,64,.035,12,false);
+  const mat = new THREE.MeshStandardMaterial({color,metalness:.3,roughness:.3});
+  const mesh = new THREE.Mesh(geo,mat);
+  scene.add(mesh);
+  return curve;
+}
+
+const airCurve = pipe([[-3.4,.9,-2.2],[-3.4,1,-.9],[-3.8,1,0]],0x38bdf8);
+const h2Curve = pipe([[-2.4,.9,-2.2],[-1.3,.8,-1.1],[-.2,.95,0]],0xef4444);
+const keroCurve = pipe([[-1.4,.9,-2.2],[-.6,.7,-1.2],[.05,.9,0]],0xfacc15);
+const exhaustCurve = pipe([[2.8,1,0],[3.7,1,0],[4.6,1,0]],0xe5e7eb);
+
+/* DAQ */
+const daq = box(1.1,.75,.65,new THREE.MeshStandardMaterial({color:0x020617,metalness:.3,roughness:.5}),1.4,.55,-2.1);
+const screen = box(.65,.34,.03,new THREE.MeshBasicMaterial({color:0x22c55e}),1.4,.65,-2.44);
+
+/* particles */
+const particles = [];
+function createParticle(color){
+  const p = sphere(.035,new THREE.MeshBasicMaterial({color}),0,0,0);
+  p.visible = false;
+  particles.push(p);
+  return p;
+}
+
+const airParticles = Array.from({length:28},()=>createParticle(0x38bdf8));
+const h2Particles = Array.from({length:18},()=>createParticle(0xef4444));
+const keroParticles = Array.from({length:18},()=>createParticle(0xfacc15));
+const exhaustParticles = Array.from({length:28},()=>createParticle(0xe5e7eb));
+
+function moveParticles(list, curve, active, tOffset){
+  list.forEach((p,i)=>{
+    p.visible = active;
+    if(!active) return;
+    const t = ((clock.elapsedTime*.45 + i/list.length + tOffset) % 1);
+    const pos = curve.getPoint(t);
+    p.position.copy(pos);
+  });
+}
+
+/* flame */
+const flame = new THREE.Mesh(
+  new THREE.SphereGeometry(.45,64,32),
+  flameMat
+);
+flame.scale.set(1.9,.45,.45);
+flame.position.set(.55,1,0);
+scene.add(flame);
+
+/* floor */
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(18,12),
+  new THREE.MeshStandardMaterial({color:0x07111f,roughness:.75})
+);
+floor.rotation.x = -Math.PI/2;
+floor.position.y = -.05;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const grid = new THREE.GridHelper(18,36,0x38bdf8,0x1e293b);
+grid.position.y = 0;
+scene.add(grid);
+
+/* labels */
+function label(text,x,y,z){
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 128;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "rgba(2,6,23,.75)";
+  ctx.fillRect(0,0,512,128);
+  ctx.strokeStyle = "#38bdf8";
+  ctx.strokeRect(4,4,504,120);
+  ctx.fillStyle = "#e0f2fe";
+  ctx.font = "bold 42px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(text,256,78);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({map:tex,transparent:true});
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(1.2,.3,1);
+  spr.position.set(x,y,z);
+  scene.add(spr);
+}
+
+label("BLOWER",-3.8,2,0);
+label("PREHEATER",-1.85,2,0);
+label("COMBUSTION CHAMBER",.65,2.1,0);
+label("NOZZLE",2.8,1.85,0);
+label("AIR",-3.4,1.25,-2.2);
+label("H₂",-2.4,1.25,-2.2);
+label("KEROSENE",-1.4,1.25,-2.2);
+label("DAQ",1.4,1.15,-2.1);
+
+const clock = new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+
+  if(step >= 1){
+    fanGroup.rotation.x += .24;
+  }
+
+  moveParticles(airParticles, airCurve, step >= 1, 0);
+  moveParticles(h2Particles, h2Curve, step >= 3, .15);
+  moveParticles(keroParticles, keroCurve, step >= 4, .3);
+  moveParticles(exhaustParticles, exhaustCurve, step >= 6, .45);
+
+  if(step >= 2){
+    preGlow.material.opacity = .25 + Math.sin(clock.elapsedTime*5)*.12;
+  }else{
+    preGlow.material.opacity = 0;
+  }
+
+  if(step >= 5){
+    flame.material.opacity = .55 + Math.sin(clock.elapsedTime*18)*.18;
+    flame.scale.x = 1.9 + Math.sin(clock.elapsedTime*20)*.18;
+    flame.scale.y = .45 + Math.sin(clock.elapsedTime*16)*.05;
+    flameLight.intensity = 4 + Math.sin(clock.elapsedTime*18)*1.5;
+  }else{
+    flame.material.opacity = 0;
+    flameLight.intensity = 0;
+  }
+
+  if(step >= 6){
+    daq.material.emissive = new THREE.Color(0x064e3b);
+    daq.material.emissiveIntensity = .9 + Math.sin(clock.elapsedTime*5)*.3;
+  }else{
+    daq.material.emissiveIntensity = 0;
+  }
+
+  renderer.render(scene,camera);
+}
+
+animate();
+
+window.addEventListener("resize",()=>{
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+function setUI(status,temp,pressure,flow,eff){
+  document.getElementById("status").innerText = status;
+  document.getElementById("temp").innerText = temp;
+  document.getElementById("pressure").innerText = pressure;
+  document.getElementById("flow").innerText = flow;
+  document.getElementById("eff").innerText = eff;
+}
+
+window.nextStep = function(){
+  if(step >= 6) return;
+  step++;
+
+  if(step === 1) setUI("BLOWER RUNNING","300 K","1.8 bar","0.22 kg/s","--");
+  if(step === 2) setUI("PREHEATER ACTIVE","650 K","2.1 bar","0.25 kg/s","--");
+  if(step === 3) setUI("HYDROGEN VALVE OPEN","700 K","2.5 bar","0.27 kg/s","--");
+  if(step === 4) setUI("KEROSENE PUMP ACTIVE","760 K","3.2 bar","0.29 kg/s","--");
+  if(step === 5) setUI("IGNITION STARTED","1420 K","4.2 bar","0.31 kg/s","92.8%");
+  if(step === 6) setUI("FULL SYSTEM RUNNING","1480 K","5.0 bar","0.34 kg/s","96.5%");
+};
+
+window.autoRun = function(){
+  shutdown();
+  autoTimer = setInterval(()=>{
+    nextStep();
+    if(step >= 6) clearInterval(autoTimer);
+  },900);
+};
+
+window.shutdown = function(){
+  step = 0;
+  if(autoTimer) clearInterval(autoTimer);
+  setUI("SYSTEM STANDBY","300 K","0.0 bar","0.00 kg/s","--");
+};
+
+</script>
 </body>
 </html>
