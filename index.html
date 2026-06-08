@@ -1,23 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Combustor Lab</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab-Scale Combustor Digital Twin</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<h1>Lab Scale Combustor Digital Twin</h1>
+  <div class="page">
+    <h1>Lab-Scale Gas Turbine Digital Twin</h1>
+    <p id="status">SYSTEM STANDBY</p>
 
-<img src="combustor-poster.png" id="poster">
+    <div class="lab">
 
-<div>
-    <button onclick="startSystem()">IGNITE</button>
-    <button onclick="shutdownSystem()">SHUTDOWN</button>
-</div>
+      <img src="combustor-poster.png" class="poster" />
 
-<div id="status">SYSTEM OFF</div>
+      <div id="blower" class="blower"></div>
 
-<script src="script.js"></script>
+      <div id="airFlow" class="flow air-flow"></div>
+      <div id="h2Flow" class="flow h2-flow"></div>
+      <div id="keroFlow" class="flow kero-flow"></div>
+      <div id="exhaustFlow" class="flow exhaust-flow"></div>
 
+      <div id="preheater" class="preheater"></div>
+      <div id="flame" class="flame"></div>
+      <div id="spark" class="spark"></div>
+
+      <div id="daq" class="daq"></div>
+
+      <div class="gauge temp">TEMP<br><span id="temp">300 K</span></div>
+      <div class="gauge pressure">PRESSURE<br><span id="pressure">0 bar</span></div>
+      <div class="gauge eff">EFFICIENCY<br><span id="eff">--</span></div>
+
+    </div>
+
+    <div class="controls">
+      <button onclick="nextStep()">START NEXT SYSTEM</button>
+      <button onclick="shutdown()">SHUTDOWN</button>
+    </div>
+
+    <div class="steps">
+      <div id="s1">1. Blower</div>
+      <div id="s2">2. Preheater</div>
+      <div id="s3">3. Hydrogen</div>
+      <div id="s4">4. Kerosene</div>
+      <div id="s5">5. Ignition</div>
+      <div id="s6">6. Full Run</div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
