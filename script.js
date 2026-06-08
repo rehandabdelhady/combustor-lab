@@ -1,94 +1,159 @@
 let step = 0;
+let autoTimer = null;
+
+const data = {
+  temp: [300, 300, 650, 700, 760, 1420, 1480],
+  pressure: [0, 1.8, 2.1, 2.5, 3.2, 4.2, 5.0],
+  air: [0, 0.22, 0.25, 0.27, 0.29, 0.31, 0.34],
+  eff: ["--", "--", "--", "--", "--", "92.8%", "96.5%"]
+};
+
+function el(id) {
+  return document.getElementById(id);
+}
 
 function show(id) {
-  document.getElementById(id).style.display = "block";
+  el(id).style.display = "block";
 }
 
 function hide(id) {
-  document.getElementById(id).style.display = "none";
+  el(id).style.display = "none";
 }
 
-function activateStep(id) {
-  document.getElementById(id).classList.add("active-step");
+function setStatus(text) {
+  el("systemStatus").innerText = text;
+}
+
+function updateReadings() {
+  el("temp").innerText = data.temp[step] + " K";
+  el("pressure").innerText = data.pressure[step].toFixed(1) + " bar";
+  el("air").innerText = data.air[step].toFixed(2) + " kg/s";
+  el("eff").innerText = data.eff[step];
+}
+
+function activateStep(n) {
+  el("step" + n).classList.add("active");
 }
 
 function nextStep() {
+  if (step >= 6) return;
+
   step++;
 
   if (step === 1) {
-    show("blower");
+    el("fan").classList.add("run");
     show("airFlow");
-    activateStep("s1");
-    document.getElementById("status").innerText = "BLOWER STARTED";
-    document.getElementById("pressure").innerText = "1.8 bar";
+    activateStep(1);
+    setStatus("BLOWER RUNNING");
+    el("runMode").innerText = "AIR SYSTEM ACTIVE";
   }
 
   if (step === 2) {
-    show("preheater");
-    activateStep("s2");
-    document.getElementById("status").innerText = "PREHEATER ON";
-    document.getElementById("temp").innerText = "650 K";
+    show("heaterGlow");
+    activateStep(2);
+    setStatus("PREHEATER ACTIVE");
+    el("runMode").innerText = "THERMAL MODE";
   }
 
   if (step === 3) {
     show("h2Flow");
-    activateStep("s3");
-    document.getElementById("status").innerText = "HYDROGEN VALVE OPEN";
+    activateStep(3);
+    setStatus("HYDROGEN VALVE OPEN");
+    el("runMode").innerText = "DUAL FUEL PREP";
   }
 
   if (step === 4) {
     show("keroFlow");
-    activateStep("s4");
-    document.getElementById("status").innerText = "KEROSENE PUMP ON";
+    activateStep(4);
+    setStatus("KEROSENE PUMP ACTIVE");
   }
 
   if (step === 5) {
     show("spark");
     show("flame");
-    activateStep("s5");
-    document.getElementById("status").innerText = "IGNITION STARTED";
+    activateStep(5);
+    setStatus("IGNITION STARTED");
 
-    setTimeout(() => {
+    setTimeout(function () {
       hide("spark");
-    }, 1500);
-
-    document.getElementById("temp").innerText = "1420 K";
-    document.getElementById("pressure").innerText = "4.2 bar";
+    }, 1300);
   }
 
   if (step === 6) {
     show("exhaustFlow");
-    show("daq");
-    activateStep("s6");
-    document.getElementById("status").innerText = "FULL SYSTEM RUNNING";
-    document.getElementById("pressure").innerText = "5 bar";
-    document.getElementById("eff").innerText = "96.5%";
+    el("daqBox").classList.add("daq-run");
+    activateStep(6);
+    setStatus("FULL SYSTEM RUNNING");
+    el("runMode").innerText = "ONLINE";
   }
 
-  if (step > 6) {
-    step = 6;
-  }
+  updateReadings();
+}
+
+function autoRun() {
+  shutdown();
+
+  autoTimer = setInterval(function () {
+    nextStep();
+
+    if (step >= 6) {
+      clearInterval(autoTimer);
+    }
+  }, 900);
 }
 
 function shutdown() {
   step = 0;
 
-  hide("blower");
+  if (autoTimer) {
+    clearInterval(autoTimer);
+  }
+
   hide("airFlow");
-  hide("preheater");
   hide("h2Flow");
   hide("keroFlow");
+  hide("exhaustFlow");
+  hide("heaterGlow");
   hide("spark");
   hide("flame");
-  hide("exhaustFlow");
-  hide("daq");
 
-  document.getElementById("status").innerText = "SYSTEM STANDBY";
-  document.getElementById("temp").innerText = "300 K";
-  document.getElementById("pressure").innerText = "0 bar";
-  document.getElementById("eff").innerText = "--";
+  el("fan").classList.remove("run");
+  el("daqBox").classList.remove("daq-run");
 
-  document.querySelectorAll(".steps div").forEach((el) => {
-    el.classList.remove("active-step");
+  document.querySelectorAll(".steps div").forEach(function (item) {
+    item.classList.remove("active");
   });
+
+  setStatus("SYSTEM STANDBY");
+  el("runMode").innerText = "OFFLINE";
+  el("alarm").innerText = "No active alarms";
+  el("alarm").style.color = "#22c55e";
+
+  updateReadings();
 }
+
+function updateBlend() {
+  const h2 = Number(el("blend").value);
+  const kero = 100 - h2;
+
+  el("blendText").innerText = h2;
+  el("keroText").innerText = kero;
+
+  if (step >= 5) {
+    const temp = 1400 + h2 * 2;
+    const eff = 92 + h2 * 0.09;
+
+    el("temp").innerText = Math.round(temp) + " K";
+    el("eff").innerText = eff.toFixed(1) + "%";
+
+    if (h2 >= 45) {
+      el("alarm").innerText = "High hydrogen blend. Check flashback margin.";
+      el("alarm").style.color = "#facc15";
+    } else {
+      el("alarm").innerText = "No active alarms";
+      el("alarm").style.color = "#22c55e";
+    }
+  }
+}
+
+shutdown();
