@@ -1,451 +1,155 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Combustor Digital Twin</title>
-
-<style>
-body{
-  margin:0;
-  background:#07121f;
-  color:white;
-  font-family:Arial, sans-serif;
-  text-align:center;
-}
-
-h1{
-  margin:18px 0 5px;
-  color:#e0f2fe;
-}
-
-#status{
-  color:#38bdf8;
-  font-weight:bold;
-  letter-spacing:2px;
-}
-
-.lab{
-  position:relative;
-  width:95vw;
-  height:560px;
-  margin:20px auto;
-  background:linear-gradient(#eef6ff,#dbeafe);
-  border:3px solid #38bdf8;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 0 35px #38bdf8;
-}
-
-/* Main rig */
-.box{
-  position:absolute;
-  background:#d1d5db;
-  border:4px solid #334155;
-  border-radius:12px;
-  color:#111827;
-  font-weight:bold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.blower{
-  left:60px;
-  top:170px;
-  width:120px;
-  height:120px;
-  border-radius:50%;
-}
-
-.fan{
-  width:75px;
-  height:75px;
-  border:6px dashed #0284c7;
-  border-radius:50%;
-}
-
-.fan.run{
-  animation:spin .35s linear infinite;
-}
-
-.preheater{
-  left:250px;
-  top:165px;
-  width:170px;
-  height:130px;
-}
-
-.chamber{
-  left:500px;
-  top:165px;
-  width:300px;
-  height:130px;
-  border-radius:65px;
-  background:rgba(209,213,219,.65);
-}
-
-.nozzle{
-  left:835px;
-  top:190px;
-  width:150px;
-  height:80px;
-  clip-path:polygon(0 0,100% 25%,100% 75%,0 100%);
-  border-radius:0;
-}
-
-.tank{
-  position:absolute;
-  width:120px;
-  height:95px;
-  background:#e5e7eb;
-  border:4px solid #334155;
-  border-radius:12px;
-  color:#111827;
-  font-weight:bold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.h2tank{
-  left:120px;
-  top:390px;
-}
-
-.kerotank{
-  left:300px;
-  top:390px;
-}
-
-.daq{
-  left:560px;
-  top:380px;
-  width:190px;
-  height:105px;
-  background:#111827;
-  color:#22c55e;
-}
-
-/* Pipes */
-.pipe{
-  position:absolute;
-  height:12px;
-  background:#94a3b8;
-  border-radius:20px;
-}
-
-.airpipe{
-  left:180px;
-  top:225px;
-  width:320px;
-}
-
-.h2pipe{
-  left:235px;
-  top:420px;
-  width:295px;
-  transform:rotate(-32deg);
-}
-
-.keropipe{
-  left:415px;
-  top:420px;
-  width:160px;
-  transform:rotate(-48deg);
-}
-
-.exhaustpipe{
-  left:800px;
-  top:225px;
-  width:120px;
-}
-
-/* Animated flows */
-.flow{
-  display:none;
-  position:absolute;
-  height:14px;
-  border-radius:20px;
-  background-size:70px 14px;
-  animation:flow .55s linear infinite;
-  z-index:20;
-}
-
-.airflow{
-  left:180px;
-  top:224px;
-  width:320px;
-  background-image:linear-gradient(90deg,transparent,#38bdf8,transparent);
-}
-
-.h2flow{
-  left:235px;
-  top:420px;
-  width:295px;
-  transform:rotate(-32deg);
-  background-image:linear-gradient(90deg,transparent,#ef4444,transparent);
-}
-
-.keroflow{
-  left:415px;
-  top:420px;
-  width:160px;
-  transform:rotate(-48deg);
-  background-image:linear-gradient(90deg,transparent,#facc15,transparent);
-}
-
-.exhaustflow{
-  left:800px;
-  top:224px;
-  width:180px;
-  background-image:linear-gradient(90deg,transparent,#64748b,transparent);
-}
-
-/* Effects */
-.glow{
-  display:none;
-  position:absolute;
-  left:265px;
-  top:180px;
-  width:140px;
-  height:95px;
-  border-radius:30px;
-  background:radial-gradient(circle,#fb923c,transparent 70%);
-  animation:pulse .8s infinite;
-}
-
-.flame{
-  display:none;
-  position:absolute;
-  left:530px;
-  top:195px;
-  width:250px;
-  height:75px;
-  background:radial-gradient(ellipse,#fef08a,#fb923c,#ef4444,transparent 75%);
-  border-radius:50%;
-  filter:blur(4px);
-  animation:flame .13s infinite alternate;
-  z-index:30;
-}
-
-.spark{
-  display:none;
-  position:absolute;
-  left:510px;
-  top:210px;
-  width:24px;
-  height:24px;
-  background:white;
-  border-radius:50%;
-  box-shadow:0 0 25px white,0 0 45px #facc15;
-  animation:pulse .2s infinite;
-  z-index:40;
-}
-
-.daqrun{
-  box-shadow:0 0 25px #22c55e;
-  animation:pulse 1s infinite;
-}
-
-/* Labels */
-.label{
-  position:absolute;
-  color:#111827;
-  font-size:13px;
-  font-weight:bold;
-}
-
-.l1{left:85px;top:305px;}
-.l2{left:285px;top:305px;}
-.l3{left:590px;top:305px;}
-.l4{left:875px;top:305px;}
-
-.gauge{
-  position:absolute;
-  right:30px;
-  width:150px;
-  padding:12px;
-  background:#020617;
-  border:2px solid #38bdf8;
-  border-radius:10px;
-  color:#e0f2fe;
-  font-weight:bold;
-}
-
-.g1{top:360px;}
-.g2{top:430px;}
-.g3{top:500px;}
-
-.controls{
-  margin-bottom:20px;
-}
-
-button{
-  padding:13px 25px;
-  margin:6px;
-  background:#0f172a;
-  color:white;
-  border:1px solid #38bdf8;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-button:hover{
-  background:#1e3a8a;
-}
-
-@keyframes spin{
-  to{transform:rotate(360deg);}
-}
-
-@keyframes flow{
-  from{background-position:-70px 0;}
-  to{background-position:70px 0;}
-}
-
-@keyframes pulse{
-  50%{opacity:.35;}
-}
-
-@keyframes flame{
-  from{transform:scaleX(.9) scaleY(.8);}
-  to{transform:scaleX(1.15) scaleY(1);}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lab-Scale Gas Turbine Digital Twin</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+  <main class="app">
+    <header class="hero">
+      <p class="eyebrow">SOLIDWORKS ASSEMBLY · DIGITAL TWIN · DUAL FUEL</p>
+      <h1>Lab-Scale Gas Turbine Engine</h1>
+      <p id="systemStatus" class="system-status">SYSTEM STANDBY</p>
+    </header>
 
-<h1>Lab-Scale Combustor Digital Twin</h1>
-<p id="status">SYSTEM STANDBY</p>
+    <section class="dashboard">
+      <section class="scene-card">
+        <div class="scene-header">
+          <span>LIVE 3D-STYLE ASSEMBLY</span>
+          <span id="runMode">OFFLINE</span>
+        </div>
 
-<div class="lab">
+        <div class="rig">
 
-  <div class="box blower">
-    <div id="fan" class="fan"></div>
-  </div>
+          <div class="base"></div>
 
-  <div class="box preheater">PREHEATER</div>
-  <div class="box chamber">COMBUSTION CHAMBER</div>
-  <div class="box nozzle">NOZZLE</div>
+          <div class="module blower-module" data-label="BLOWER">
+            <div id="fan" class="fan">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
 
-  <div class="tank h2tank">H₂ TANK</div>
-  <div class="tank kerotank">KEROSENE</div>
-  <div id="daq" class="box daq">DAQ SYSTEM</div>
+          <div class="coupler c1"></div>
 
-  <div class="pipe airpipe"></div>
-  <div class="pipe h2pipe"></div>
-  <div class="pipe keropipe"></div>
-  <div class="pipe exhaustpipe"></div>
+          <div class="module preheater-module" data-label="PREHEATER">
+            <div id="heaterGlow" class="heater-glow"></div>
+            <div class="coil"></div>
+            <div class="mesh"></div>
+          </div>
 
-  <div id="air" class="flow airflow"></div>
-  <div id="h2" class="flow h2flow"></div>
-  <div id="kero" class="flow keroflow"></div>
-  <div id="exhaust" class="flow exhaustflow"></div>
+          <div class="coupler c2"></div>
 
-  <div id="glow" class="glow"></div>
-  <div id="spark" class="spark"></div>
-  <div id="flame" class="flame"></div>
+          <div class="module chamber-module" data-label="TRANSPARENT COMBUSTION CHAMBER">
+            <div class="liner"></div>
+            <div class="holes"></div>
+            <div id="spark" class="spark"></div>
+            <div id="flame" class="flame"></div>
+          </div>
 
-  <div class="label l1">BLOWER</div>
-  <div class="label l2">HEATED AIR</div>
-  <div class="label l3">VISIBLE FLAME</div>
-  <div class="label l4">EXHAUST</div>
+          <div class="coupler c3"></div>
 
-  <div class="gauge g1">TEMP<br><span id="temp">300 K</span></div>
-  <div class="gauge g2">PRESSURE<br><span id="pressure">0 bar</span></div>
-  <div class="gauge g3">EFFICIENCY<br><span id="eff">--</span></div>
+          <div class="module nozzle-module" data-label="NOZZLE"></div>
 
-</div>
+          <div id="airFlow" class="flow air-flow"></div>
+          <div id="h2Flow" class="flow h2-flow"></div>
+          <div id="keroFlow" class="flow kero-flow"></div>
+          <div id="exhaustFlow" class="flow exhaust-flow"></div>
 
-<div class="controls">
-  <button onclick="nextStep()">START NEXT SYSTEM</button>
-  <button onclick="shutdown()">SHUTDOWN</button>
-</div>
+          <div class="tank air-tank">AIR</div>
+          <div class="tank h2-tank">H₂</div>
+          <div class="tank kero-tank">KEROSENE</div>
 
-<script>
-let step = 0;
+          <div class="pipe air-pipe"></div>
+          <div class="pipe h2-pipe"></div>
+          <div class="pipe kero-pipe"></div>
 
-function show(id){
-  document.getElementById(id).style.display = "block";
-}
+          <div id="daqBox" class="daq-box">
+            <span>DAQ</span>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
 
-function hide(id){
-  document.getElementById(id).style.display = "none";
-}
+        </div>
+      </section>
 
-function nextStep(){
-  step++;
+      <aside class="side-panel">
+        <div class="panel">
+          <h2>Startup Sequence</h2>
 
-  if(step === 1){
-    document.getElementById("fan").classList.add("run");
-    show("air");
-    document.getElementById("status").innerText = "BLOWER ON";
-    document.getElementById("pressure").innerText = "1.8 bar";
-  }
+          <button onclick="nextStep()" class="primary-btn">START NEXT SYSTEM</button>
+          <button onclick="autoRun()" class="secondary-btn">AUTO IGNITION</button>
+          <button onclick="shutdown()" class="danger-btn">SHUTDOWN</button>
 
-  if(step === 2){
-    show("glow");
-    document.getElementById("status").innerText = "PREHEATER ON";
-    document.getElementById("temp").innerText = "650 K";
-  }
+          <div class="steps">
+            <div id="step1">1 · Blower</div>
+            <div id="step2">2 · Preheater</div>
+            <div id="step3">3 · Hydrogen</div>
+            <div id="step4">4 · Kerosene</div>
+            <div id="step5">5 · Ignition</div>
+            <div id="step6">6 · Full Run</div>
+          </div>
+        </div>
 
-  if(step === 3){
-    show("h2");
-    document.getElementById("status").innerText = "HYDROGEN FLOW ON";
-  }
+        <div class="panel">
+          <h2>Live Readings</h2>
 
-  if(step === 4){
-    show("kero");
-    document.getElementById("status").innerText = "KEROSENE FLOW ON";
-  }
+          <div class="reading">
+            <span>Temperature</span>
+            <b id="temp">300 K</b>
+          </div>
 
-  if(step === 5){
-    show("spark");
-    show("flame");
-    document.getElementById("status").innerText = "IGNITION STARTED";
-    document.getElementById("temp").innerText = "1420 K";
-    document.getElementById("pressure").innerText = "4.2 bar";
+          <div class="reading">
+            <span>Pressure</span>
+            <b id="pressure">0.0 bar</b>
+          </div>
 
-    setTimeout(function(){
-      hide("spark");
-    },1200);
-  }
+          <div class="reading">
+            <span>Air Flow</span>
+            <b id="air">0 kg/s</b>
+          </div>
 
-  if(step === 6){
-    show("exhaust");
-    document.getElementById("daq").classList.add("daqrun");
-    document.getElementById("status").innerText = "FULL SYSTEM RUNNING";
-    document.getElementById("pressure").innerText = "5 bar";
-    document.getElementById("eff").innerText = "96.5%";
-  }
+          <div class="reading">
+            <span>Efficiency</span>
+            <b id="eff">--</b>
+          </div>
+        </div>
 
-  if(step > 6){
-    step = 6;
-  }
-}
+        <div class="panel alarm-panel">
+          <h2>Safety System</h2>
+          <p id="alarm">No active alarms</p>
+        </div>
+      </aside>
+    </section>
 
-function shutdown(){
-  step = 0;
+    <section class="bottom-grid">
+      <div class="panel">
+        <h2>P&ID View</h2>
+        <div class="pid">
+          <span>AIR</span><i></i><span>FILTER</span><i></i><span>REG</span><i></i><span>MIXER</span><i></i><span>CHAMBER</span><i></i><span>NOZZLE</span>
+        </div>
+      </div>
 
-  hide("air");
-  hide("h2");
-  hide("kero");
-  hide("exhaust");
-  hide("glow");
-  hide("spark");
-  hide("flame");
+      <div class="panel">
+        <h2>Combustion Zones</h2>
+        <div class="zones">
+          <div>PRIMARY<br><small>Ignition</small></div>
+          <div>SECONDARY<br><small>Burning</small></div>
+          <div>DILUTION<br><small>Cooling</small></div>
+        </div>
+      </div>
 
-  document.getElementById("fan").classList.remove("run");
-  document.getElementById("daq").classList.remove("daqrun");
+      <div class="panel">
+        <h2>Fuel Blend</h2>
+        <input id="blend" type="range" min="0" max="50" value="20" step="5" oninput="updateBlend()" />
+        <p><span id="blendText">20</span>% Hydrogen · <span id="keroText">80</span>% Kerosene</p>
+      </div>
+    </section>
+  </main>
 
-  document.getElementById("status").innerText = "SYSTEM STANDBY";
-  document.getElementById("temp").innerText = "300 K";
-  document.getElementById("pressure").innerText = "0 bar";
-  document.getElementById("eff").innerText = "--";
-}
-</script>
-
+  <script src="script.js"></script>
 </body>
 </html>
