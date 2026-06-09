@@ -2,1082 +2,1079 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Gas Turbine Combustor — Digital Twin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Gas Turbine Combustor — Digital Twin v3</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#060a12;color:#c8d8e8;font-family:'Courier New',monospace;overflow:hidden;user-select:none;}
-#canvas-container{position:fixed;top:0;left:0;width:100%;height:100%;}
-canvas{display:block;}
-#hud{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;}
-
-#dashboard{
-  position:fixed;top:14px;right:14px;width:238px;
-  background:rgba(5,12,24,0.94);border:1px solid #163252;
-  border-radius:3px;padding:11px 13px;pointer-events:auto;
-  box-shadow:0 0 24px rgba(0,100,255,0.12),inset 0 0 30px rgba(0,0,0,0.4);
-}
-.dash-title{font-size:9px;letter-spacing:2.5px;color:#3a8eff;text-transform:uppercase;
-  border-bottom:1px solid #163252;padding-bottom:6px;margin-bottom:8px;}
-.dash-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3.5px;}
-.dash-label{font-size:8.5px;color:#5a7a9a;letter-spacing:0.8px;}
-.dash-value{font-size:9.5px;color:#00e5ff;font-weight:bold;font-family:'Courier New',monospace;}
-.dash-value.ok{color:#00ff88;} .dash-value.warn{color:#ffaa00;} .dash-value.alert{color:#ff3344;}
-.dash-divider{border-top:1px solid #0d2040;margin:5px 0;}
-.status-bar{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#00ff88;box-shadow:0 0 7px #00ff88;animation:pg 2s infinite;}
-.status-dot.standby{background:#4a9eff;box-shadow:0 0 7px #4a9eff;animation:pb 2s infinite;}
-.status-dot.alarm{background:#ff3344;box-shadow:0 0 7px #ff3344;animation:pr 0.7s infinite;}
-.status-text{font-size:9px;letter-spacing:2px;color:#c8d8e8;}
-@keyframes pg{0%,100%{opacity:1;}50%{opacity:0.3;}}
-@keyframes pb{0%,100%{opacity:1;}50%{opacity:0.4;}}
-@keyframes pr{0%,100%{opacity:1;}50%{opacity:0.1;}}
-
-#controls{
-  position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
-  background:rgba(5,12,24,0.94);border:1px solid #163252;
-  border-radius:3px;padding:10px 16px;pointer-events:auto;
-  display:flex;align-items:center;gap:12px;
-  box-shadow:0 0 24px rgba(0,100,255,0.12);
-}
-.ctrl-btn{
-  padding:7px 13px;border:1px solid #1a5a8c;background:rgba(0,70,150,0.3);
-  color:#4a9eff;font-family:'Courier New',monospace;font-size:8.5px;
-  letter-spacing:1.5px;cursor:pointer;border-radius:2px;
-  transition:all 0.12s;text-transform:uppercase;white-space:nowrap;
-}
-.ctrl-btn:hover{background:rgba(0,120,255,0.45);border-color:#4a9eff;color:#fff;box-shadow:0 0 10px rgba(0,120,255,0.35);}
-.ctrl-btn:active{transform:scale(0.96);}
-.ctrl-btn.estop{border-color:#7c1a1a;background:rgba(140,0,0,0.3);color:#ff4455;}
-.ctrl-btn.estop:hover{background:rgba(220,20,40,0.5);border-color:#ff4455;color:#fff;box-shadow:0 0 12px rgba(255,30,50,0.5);}
-.ctrl-btn.active{background:rgba(0,180,90,0.18);border-color:#00ff88;color:#00ff88;box-shadow:0 0 8px rgba(0,255,136,0.25);}
-.slider-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:120px;}
-.slider-label{font-size:8px;color:#5a7a9a;letter-spacing:1.2px;}
-.slider-val{font-size:9px;color:#00e5ff;}
-input[type=range]{-webkit-appearance:none;width:110px;height:3px;
-  background:linear-gradient(to right,#00e5ff 0%,#163252 100%);border-radius:2px;outline:none;cursor:pointer;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;
-  border-radius:50%;background:#00e5ff;cursor:pointer;box-shadow:0 0 6px #00e5ff;}
-.dv{width:1px;height:38px;background:#163252;}
-
-#info{position:fixed;top:14px;left:14px;
-  background:rgba(5,12,24,0.94);border:1px solid #163252;
-  border-radius:3px;padding:10px 13px;font-size:8px;color:#4a6a8a;
-  letter-spacing:1px;line-height:1.9;}
-#info b{color:#4a9eff;font-size:8.5px;}
-
-#seq-log{position:fixed;bottom:78px;left:14px;width:210px;
-  background:rgba(5,12,24,0.94);border:1px solid #163252;
-  border-radius:3px;padding:8px 11px;font-size:8px;
-  letter-spacing:0.8px;line-height:2.0;}
-.sq{color:#3a5a7a;} .sq.done{color:#00ff88;} .sq.active{color:#00e5ff;animation:blink 0.7s infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
-
-#zone-labels{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+body{background:#04080f;color:#c8d8e8;font-family:'Courier New',monospace;overflow:hidden;user-select:none;}
+#cc{position:fixed;inset:0;}canvas{display:block;}
+#dash{position:fixed;top:14px;right:14px;width:238px;background:rgba(3,8,18,0.97);border:1px solid rgba(0,100,220,0.32);border-radius:4px;padding:11px 13px;box-shadow:0 0 28px rgba(0,60,200,0.18);z-index:20;}
+.dt{font-size:9px;letter-spacing:2.5px;color:#2a7eff;text-transform:uppercase;border-bottom:1px solid rgba(0,80,200,0.25);padding-bottom:5px;margin-bottom:8px;}
+.dr{display:flex;justify-content:space-between;align-items:center;margin-bottom:3.5px;}
+.dl{font-size:8px;color:#3a5a7a;letter-spacing:.8px;text-transform:uppercase;}
+.dv{font-size:9.5px;color:#00e5ff;font-weight:bold;}
+.dv.ok{color:#00ff88;}.dv.w{color:#ffaa00;}.dv.al{color:#ff3344;}
+.dd{border-top:1px solid rgba(0,60,140,0.3);margin:5px 0;}
+.sb{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.sd{width:8px;height:8px;border-radius:50%;background:#2a4a2a;}
+.sd.run{background:#00ff88;box-shadow:0 0 8px #00ff88;animation:gp 1.8s infinite;}
+.sd.ign{background:#ffaa00;box-shadow:0 0 7px #ffaa00;animation:gp .5s infinite;}
+.sd.es{background:#ff3344;box-shadow:0 0 7px #ff3344;animation:gp .3s infinite;}
+.sd.st{background:#4a9eff;box-shadow:0 0 6px #4a9eff;animation:gp 2s infinite;}
+@keyframes gp{0%,100%{opacity:1}50%{opacity:.2}}
+.st{font-size:9px;letter-spacing:2px;}
+#ctrl{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(3,8,18,0.97);border:1px solid rgba(0,100,220,0.32);border-radius:4px;padding:9px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;box-shadow:0 0 22px rgba(0,60,200,0.14);z-index:20;}
+.cb{padding:6px 11px;border:1px solid #1a5a8c;background:rgba(0,60,140,0.25);color:#4a9eff;font-family:'Courier New',monospace;font-size:8.5px;letter-spacing:1.5px;cursor:pointer;border-radius:2px;transition:all .12s;text-transform:uppercase;white-space:nowrap;}
+.cb:hover{background:rgba(0,110,240,0.4);border-color:#4a9eff;color:#fff;}
+.cb.es{border-color:#7c1a1a;background:rgba(130,0,0,.25);color:#ff4455;}
+.cb.es:hover{background:rgba(220,20,40,.45);border-color:#ff4455;}
+.cb.on{background:rgba(0,160,80,.16);border-color:#00ff88;color:#00ff88;}
+.sw{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:110px;}
+.sl{font-size:8px;color:#3a5a7a;letter-spacing:1.2px;}
+.sv{font-size:9px;color:#00e5ff;}
+input[type=range]{-webkit-appearance:none;width:105px;height:3px;background:linear-gradient(to right,#00e5ff 0%,#163252 100%);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:#00e5ff;cursor:pointer;box-shadow:0 0 5px #00e5ff;}
+.dv2{width:1px;height:34px;background:rgba(0,80,200,.28);}
+#seqlog{position:fixed;bottom:72px;left:14px;width:195px;background:rgba(3,8,18,0.97);border:1px solid rgba(0,80,200,.25);border-radius:4px;padding:7px 11px;font-size:8px;letter-spacing:.8px;line-height:2.1;}
+.sq{color:#253545;}.sq.done{color:#00ff88;}.sq.act{color:#00e5ff;animation:bl .6s infinite;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.15}}
+#info{position:fixed;top:14px;left:14px;background:rgba(3,8,18,0.97);border:1px solid rgba(0,80,200,.25);border-radius:4px;padding:8px 11px;font-size:8px;color:#2a4a6a;letter-spacing:1px;line-height:2.0;}
+#info b{color:#3a8eff;font-size:8.5px;}
+#soundBtn{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:rgba(3,8,18,0.97);border:1px solid rgba(0,80,200,.3);border-radius:4px;padding:6px 14px;font-size:8.5px;letter-spacing:1.5px;color:#4a9eff;cursor:pointer;z-index:20;text-transform:uppercase;}
+#soundBtn:hover{background:rgba(0,80,200,.25);color:#fff;}
 </style>
 </head>
 <body>
-<div id="canvas-container"></div>
-<div id="hud">
-  <div id="info">
-    <b>GAS TURBINE COMBUSTOR · DIGITAL TWIN v1.0</b><br>
-    Drag: Rotate &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right-drag: Pan
-  </div>
-
-  <div id="dashboard">
-    <div class="dash-title">▸ System Monitor</div>
-    <div class="status-bar">
-      <div class="status-dot standby" id="status-dot"></div>
-      <span class="status-text" id="status-text">STANDBY</span>
-    </div>
-    <div class="dash-row"><span class="dash-label">T1 · Blower Inlet</span><span class="dash-value" id="v-t1">-- °C</span></div>
-    <div class="dash-row"><span class="dash-label">T2 · Preheater Out</span><span class="dash-value" id="v-t2">-- °C</span></div>
-    <div class="dash-row"><span class="dash-label">T3 · Primary Zone</span><span class="dash-value" id="v-t3">-- °C</span></div>
-    <div class="dash-row"><span class="dash-label">T4 · Exhaust</span><span class="dash-value" id="v-t4">-- °C</span></div>
-    <div class="dash-divider"></div>
-    <div class="dash-row"><span class="dash-label">P1 · Chamber</span><span class="dash-value" id="v-p1">-- bar</span></div>
-    <div class="dash-row"><span class="dash-label">P2 · Nozzle</span><span class="dash-value" id="v-p2">-- bar</span></div>
-    <div class="dash-divider"></div>
-    <div class="dash-row"><span class="dash-label">Air Mass Flow</span><span class="dash-value" id="v-af">-- g/s</span></div>
-    <div class="dash-row"><span class="dash-label">H₂ Mass Flow</span><span class="dash-value" id="v-hf">-- g/s</span></div>
-    <div class="dash-row"><span class="dash-label">Kerosene Flow</span><span class="dash-value" id="v-kf">-- g/s</span></div>
-    <div class="dash-divider"></div>
-    <div class="dash-row"><span class="dash-label">Combustion Eff.</span><span class="dash-value ok" id="v-eff">-- %</span></div>
-    <div class="dash-row"><span class="dash-label">Equivalence Ratio</span><span class="dash-value" id="v-phi">--</span></div>
-    <div class="dash-row"><span class="dash-label">Flame Status</span><span class="dash-value" id="v-flame">OFF</span></div>
-    <div class="dash-row"><span class="dash-label">Alarm</span><span class="dash-value ok" id="v-alarm">NORMAL</span></div>
-  </div>
-
-  <div id="controls">
-    <button class="ctrl-btn" id="btn-start" onclick="startNextSystem()">▶ Start</button>
-    <div class="dv"></div>
-    <button class="ctrl-btn" id="btn-ignite" onclick="autoIgnition()">⚡ Auto-Ignition</button>
-    <div class="dv"></div>
-    <button class="ctrl-btn estop" onclick="emergencyStop()">■ E-STOP</button>
-    <div class="dv"></div>
-    <button class="ctrl-btn" onclick="resetSystem()">↺ Reset</button>
-    <div class="dv"></div>
-    <div class="slider-wrap">
-      <span class="slider-label">H₂ Blend Ratio</span>
-      <input type="range" id="h2-slider" min="0" max="50" value="20" oninput="updateH2(this.value)"/>
-      <span class="slider-val" id="h2-val">20 %</span>
-    </div>
-  </div>
-
-  <div id="seq-log">
-    <div class="sq" id="sq1">① Blower Motor</div>
-    <div class="sq" id="sq2">② Preheater Active</div>
-    <div class="sq" id="sq3">③ H₂ Solenoid Open</div>
-    <div class="sq" id="sq4">④ Kerosene Pump</div>
-    <div class="sq" id="sq5">⑤ Ignition Sequence</div>
-    <div class="sq" id="sq6">⑥ Full Operation</div>
+<div id="cc"></div>
+<div id="info"><b>GAS TURBINE COMBUSTOR · DIGITAL TWIN v3.0</b><br>Drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right: Pan</div>
+<button id="soundBtn" onclick="toggleSound()">🔊 Enable Sound</button>
+<div id="dash">
+  <div class="dt">▸ System Monitor</div>
+  <div class="sb"><div class="sd" id="sdot"></div><span class="st" id="stxt">STANDBY</span></div>
+  <div class="dr"><span class="dl">T1 Inlet Air</span><span class="dv" id="vt1">-- °C</span></div>
+  <div class="dr"><span class="dl">T2 Preheater Out</span><span class="dv" id="vt2">-- °C</span></div>
+  <div class="dr"><span class="dl">T3 Primary Zone</span><span class="dv" id="vt3">-- °C</span></div>
+  <div class="dr"><span class="dl">T4 Exhaust</span><span class="dv" id="vt4">-- °C</span></div>
+  <div class="dd"></div>
+  <div class="dr"><span class="dl">P1 Chamber</span><span class="dv" id="vp1">-- bar</span></div>
+  <div class="dr"><span class="dl">P2 Nozzle Exit</span><span class="dv" id="vp2">-- bar</span></div>
+  <div class="dd"></div>
+  <div class="dr"><span class="dl">Air Mass Flow</span><span class="dv" id="vaf">-- g/s</span></div>
+  <div class="dr"><span class="dl">H₂ Mass Flow</span><span class="dv" id="vhf">-- g/s</span></div>
+  <div class="dr"><span class="dl">Kerosene Flow</span><span class="dv" id="vkf">-- g/s</span></div>
+  <div class="dd"></div>
+  <div class="dr"><span class="dl">Combustion Eff.</span><span class="dv ok" id="veff">-- %</span></div>
+  <div class="dr"><span class="dl">Equiv. Ratio φ</span><span class="dv" id="vphi">--</span></div>
+  <div class="dr"><span class="dl">Flame</span><span class="dv" id="vflame">OFF</span></div>
+  <div class="dr"><span class="dl">Alarm</span><span class="dv ok" id="valarm">NORMAL</span></div>
+</div>
+<div id="ctrl">
+  <button class="cb" id="bstart" onclick="startNext()">▶ Start</button>
+  <div class="dv2"></div>
+  <button class="cb" id="bign" onclick="autoIgn()">⚡ Auto-Ignition</button>
+  <div class="dv2"></div>
+  <button class="cb es" onclick="eStop()">■ E-STOP</button>
+  <div class="dv2"></div>
+  <button class="cb" onclick="resetSys()">↺ Reset</button>
+  <div class="dv2"></div>
+  <div class="sw">
+    <span class="sl">H₂ Blend</span>
+    <input type="range" id="h2sl" min="0" max="50" value="20" oninput="setH2(this.value)"/>
+    <span class="sv" id="h2v">20 %</span>
   </div>
 </div>
+<div id="seqlog">
+  <div class="sq" id="sq1">① Blower Motor</div>
+  <div class="sq" id="sq2">② Preheater Active</div>
+  <div class="sq" id="sq3">③ H₂ Solenoid Open</div>
+  <div class="sq" id="sq4">④ Kerosene Pump</div>
+  <div class="sq" id="sq5">⑤ Ignition Sequence</div>
+  <div class="sq" id="sq6">⑥ Full Operation</div>
+</div>
 
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}
-</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-// ── Renderer ──────────────────────────────────────────────────────────────
-const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.85;
-document.getElementById('canvas-container').appendChild(renderer.domElement);
+// ═══════════════════════════════════════════════════════════════
+// RENDERER
+// ═══════════════════════════════════════════════════════════════
+const renderer = new THREE.WebGLRenderer({antialias:true,logarithmicDepthBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=0.88;
+document.getElementById('cc').appendChild(renderer.domElement);
 
-// ── Scene ─────────────────────────────────────────────────────────────────
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x060a12);
-scene.fog = new THREE.FogExp2(0x060a12, 0.028);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x050a12);
+scene.fog=new THREE.FogExp2(0x050a12,0.019);
 
-// ── Camera ────────────────────────────────────────────────────────────────
-const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.05, 300);
-camera.position.set(10, 6, 14);
-camera.lookAt(0, 1, 0);
+const cam=new THREE.PerspectiveCamera(44,innerWidth/innerHeight,0.05,300);
+cam.position.set(0,4.5,14);
+cam.lookAt(0,1.2,0);
 
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.055;
-controls.minDistance = 2.5;
-controls.maxDistance = 45;
-controls.target.set(0, 1, 0);
+const orb=new OrbitControls(cam,renderer.domElement);
+orb.enableDamping=true; orb.dampingFactor=0.055;
+orb.minDistance=3; orb.maxDistance=38;
+orb.target.set(0,1.2,0);
 
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 
-// ── Lighting ──────────────────────────────────────────────────────────────
-// FIX: Object.assign cannot replace the read-only .position property on lights.
-// Use .position.set() instead for all lights.
-scene.add(new THREE.AmbientLight(0x0a1828, 1.5));
+// ═══════════════════════════════════════════════════════════════
+// LIGHTING
+// ═══════════════════════════════════════════════════════════════
+scene.add(new THREE.AmbientLight(0x0a1830,1.8));
+const sun=new THREE.DirectionalLight(0x6699cc,1.9);
+sun.position.set(8,16,6); sun.castShadow=true;
+Object.assign(sun.shadow.camera,{near:.1,far:80,left:-18,right:18,top:14,bottom:-10});
+sun.shadow.mapSize.set(2048,2048); scene.add(sun);
+const rim=new THREE.DirectionalLight(0x1a2244,0.6); rim.position.set(-10,4,-8); scene.add(rim);
+const fill=new THREE.DirectionalLight(0x223355,0.4); fill.position.set(0,-2,0); scene.add(fill);
 
-const sun = new THREE.DirectionalLight(0x5588cc, 1.8);
-sun.position.set(10, 16, 8);
-sun.castShadow = true;
-Object.assign(sun.shadow.camera, { near: 0.1, far: 80, left: -15, right: 15, top: 12, bottom: -12 });
-sun.shadow.mapSize.set(2048, 2048);
-scene.add(sun);
+// Flame lights — 3 points for realistic scatter
+const fL1=new THREE.PointLight(0xff4400,0,10); fL1.position.set(-0.2,1.5,0); scene.add(fL1);
+const fL2=new THREE.PointLight(0xff8800,0,7);  fL2.position.set(0.5,1.3,0.4); scene.add(fL2);
+const fL3=new THREE.PointLight(0xffcc44,0,5);  fL3.position.set(-0.8,1.2,-0.3); scene.add(fL3);
+const phL=new THREE.PointLight(0xff5500,0,5);  phL.position.set(-4.5,1.5,0); scene.add(phL);
 
-// FIX: was Object.assign(new THREE.DirectionalLight(...), { position: new THREE.Vector3(...) })
-// position is a read-only getter on Object3D — must use .position.set() instead.
-const rimLight = new THREE.DirectionalLight(0x2244aa, 0.6);
-rimLight.position.set(-8, 5, -6);
-scene.add(rimLight);
+// ═══════════════════════════════════════════════════════════════
+// FLOOR
+// ═══════════════════════════════════════════════════════════════
+const grid=new THREE.GridHelper(50,100,0x0b1e34,0x081426);
+grid.position.y=-0.08; scene.add(grid);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(50,50),
+  new THREE.MeshStandardMaterial({color:0x060c18,metalness:.05,roughness:.92}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-0.09; floor.receiveShadow=true; scene.add(floor);
 
-const fillLight = new THREE.PointLight(0x1133bb, 0.5, 20);
-fillLight.position.set(0, -2, 0);
-scene.add(fillLight);
+// ═══════════════════════════════════════════════════════════════
+// MATERIAL HELPERS
+// ═══════════════════════════════════════════════════════════════
+const M={
+  sDk: new THREE.MeshStandardMaterial({color:0x28343e,metalness:.92,roughness:.32}),
+  sM:  new THREE.MeshStandardMaterial({color:0x445566,metalness:.88,roughness:.28}),
+  sBt: new THREE.MeshStandardMaterial({color:0x7a8fa0,metalness:.82,roughness:.20}),
+  al:  new THREE.MeshStandardMaterial({color:0x8899aa,metalness:.78,roughness:.18}),
+  blk: new THREE.MeshStandardMaterial({color:0x111820,metalness:.5,roughness:.65}),
+  pan: new THREE.MeshStandardMaterial({color:0x18242e,metalness:.4,roughness:.72}),
+  rb:  new THREE.MeshStandardMaterial({color:0x181818,metalness:.02,roughness:.95}),
+  cop: new THREE.MeshStandardMaterial({color:0xb87333,metalness:.82,roughness:.28}),
+  br:  new THREE.MeshStandardMaterial({color:0x8b7355,metalness:.75,roughness:.35}),
+  // Tanks
+  airTk: new THREE.MeshStandardMaterial({color:0x1a3a6a,metalness:.82,roughness:.24}),
+  h2Tk:  new THREE.MeshStandardMaterial({color:0xcc1111,metalness:.85,roughness:.22}),
+  kTk:   new THREE.MeshStandardMaterial({color:0xcc8800,metalness:.78,roughness:.28}),
+  // Pipes
+  airP:  new THREE.MeshStandardMaterial({color:0x2266cc,metalness:.72,roughness:.32}),
+  h2P:   new THREE.MeshStandardMaterial({color:0xcc1111,metalness:.72,roughness:.32}),
+  kP:    new THREE.MeshStandardMaterial({color:0xcc8800,metalness:.72,roughness:.32}),
+};
+const glassM=new THREE.MeshPhysicalMaterial({color:0xaaccee,metalness:.03,roughness:.02,transmission:.93,transparent:true,opacity:.16,side:THREE.DoubleSide,thickness:.04,ior:1.5,envMapIntensity:1.8});
+const glassPH=new THREE.MeshPhysicalMaterial({color:0x88aacc,metalness:.05,roughness:.03,transmission:.88,transparent:true,opacity:.20,side:THREE.DoubleSide});
+function mkLed(hex,ei=1){return new THREE.MeshStandardMaterial({color:hex,emissive:new THREE.Color(hex),emissiveIntensity:ei,roughness:.2});}
 
-const flameLight = new THREE.PointLight(0xff6600, 0, 10);
-flameLight.position.set(2.0, 1.2, 0.3);
-scene.add(flameLight);
+// Zone glow materials
+const pGM=new THREE.MeshStandardMaterial({color:0xff3300,emissive:new THREE.Color(0xff2200),emissiveIntensity:0,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
+const sGM=new THREE.MeshStandardMaterial({color:0xff8800,emissive:new THREE.Color(0xff6600),emissiveIntensity:0,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
+const dGM=new THREE.MeshStandardMaterial({color:0x5599ff,emissive:new THREE.Color(0x3366cc),emissiveIntensity:0,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
 
-const preheaterLight = new THREE.PointLight(0xff4400, 0, 4);
-preheaterLight.position.set(0, 1.0, 0);
-scene.add(preheaterLight);
+// ═══════════════════════════════════════════════════════════════
+// GEOMETRY HELPERS
+// ═══════════════════════════════════════════════════════════════
+const CY=(r,rt,h,s=24)=>new THREE.CylinderGeometry(r,rt,h,s);
+const BX=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
+const SP=(r,w=18,h=14)=>new THREE.SphereGeometry(r,w,h);
+const TR=(r,t,rs=10,ts=44)=>new THREE.TorusGeometry(r,t,rs,ts);
 
-// ── Floor Grid ────────────────────────────────────────────────────────────
-const grid = new THREE.GridHelper(40, 80, 0x0d2340, 0x091828);
-grid.position.y = -0.06;
-scene.add(grid);
-
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x080e18, metalness: 0.1, roughness: 0.9 });
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = -0.07;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// ── Geometry/Mesh Helpers ─────────────────────────────────────────────────
-const cyl = (r, rt, h, s = 24) => new THREE.CylinderGeometry(r, rt, h, s);
-const bx  = (w, h, d) => new THREE.BoxGeometry(w, h, d);
-const sph = (r, w = 16, h = 12) => new THREE.SphereGeometry(r, w, h);
-const tor = (r, t, rs = 12, ts = 48) => new THREE.TorusGeometry(r, t, rs, ts);
-
-function addMesh(geo, mat, opts = {}) {
-  const { x=0, y=0, z=0, rx=0, ry=0, rz=0, parent=scene, cast=true, recv=true } = opts;
-  const m = new THREE.Mesh(geo, mat);
-  m.position.set(x, y, z);
-  m.rotation.set(rx, ry, rz);
-  m.castShadow = cast; m.receiveShadow = recv;
-  parent.add(m);
-  return m;
+function add(geo,mat,x=0,y=0,z=0,rx=0,ry=0,rz=0,par=scene){
+  const m=new THREE.Mesh(geo,mat);
+  m.position.set(x,y,z); m.rotation.set(rx,ry,rz);
+  m.castShadow=true; m.receiveShadow=true;
+  par.add(m); return m;
 }
 
-// ── Material Library ──────────────────────────────────────────────────────
-const steelM    = new THREE.MeshStandardMaterial({ color: 0x445566, metalness: 0.88, roughness: 0.28 });
-const steelDark = new THREE.MeshStandardMaterial({ color: 0x28343e, metalness: 0.92, roughness: 0.32 });
-const steelBrt  = new THREE.MeshStandardMaterial({ color: 0x7a8fa0, metalness: 0.82, roughness: 0.22 });
-const alumM     = new THREE.MeshStandardMaterial({ color: 0x889aaa, metalness: 0.78, roughness: 0.18 });
-const blackM    = new THREE.MeshStandardMaterial({ color: 0x111820, metalness: 0.5,  roughness: 0.65 });
-const panelM    = new THREE.MeshStandardMaterial({ color: 0x18242e, metalness: 0.4,  roughness: 0.72 });
-const rubberM   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.05, roughness: 0.95 });
-const copperM   = new THREE.MeshStandardMaterial({ color: 0xb87333, metalness: 0.82, roughness: 0.28 });
-const blueM     = new THREE.MeshStandardMaterial({ color: 0x1155bb, metalness: 0.7,  roughness: 0.3 });
-const redM      = new THREE.MeshStandardMaterial({ color: 0xcc2222, metalness: 0.7,  roughness: 0.3 });
-const yellowM   = new THREE.MeshStandardMaterial({ color: 0xcc9900, metalness: 0.7,  roughness: 0.3 });
-const greenM    = new THREE.MeshStandardMaterial({ color: 0x228844, metalness: 0.65, roughness: 0.35 });
-
-const glassM = new THREE.MeshPhysicalMaterial({
-  color: 0x88ccff, metalness: 0.05, roughness: 0.02,
-  transmission: 0.88, transparent: true, opacity: 0.22,
-  side: THREE.DoubleSide, envMapIntensity: 1.2
-});
-const glassM2 = new THREE.MeshPhysicalMaterial({
-  color: 0x66aacc, metalness: 0.1, roughness: 0.04,
-  transmission: 0.82, transparent: true, opacity: 0.28,
-  side: THREE.DoubleSide
-});
-
-const makeLED = (hex, ei = 1.0) => new THREE.MeshStandardMaterial({
-  color: hex, emissive: new THREE.Color(hex), emissiveIntensity: ei, roughness: 0.25
-});
-const ledGreenM  = makeLED(0x00ff88, 0.4);
-const ledRedM    = makeLED(0xff2244, 0.3);
-const ledBlueM   = makeLED(0x00aaff, 0.7);
-const ledOrangeM = makeLED(0xff8800, 0.0);
-
-// ── Clamp Ring Helper ─────────────────────────────────────────────────────
-function clampRing(px, py, pz) {
-  const g = new THREE.Group();
-  g.position.set(px, py, pz);
-  scene.add(g);
-  const ring = new THREE.Mesh(tor(0.24, 0.025, 8, 32), steelBrt);
-  ring.rotation.x = Math.PI / 2;
-  g.add(ring);
-  for (let i = 0; i < 6; i++) {
-    const a = i * Math.PI / 3;
-    const tab = new THREE.Mesh(bx(0.07, 0.1, 0.04), steelDark);
-    tab.position.set(Math.cos(a) * 0.24, Math.sin(a) * 0.24, 0);
-    tab.rotation.z = a;
-    g.add(tab);
-  }
+// Clamp ring (ventilation duct clamp like reference photos)
+function clamp(x,y,z,r=0.32,par=scene){
+  const g=new THREE.Group(); g.position.set(x,y,z); par.add(g);
+  add(TR(r,.03,8,40),M.sBt,0,0,0,Math.PI/2,0,0,g);
+  add(TR(r+.012,.008,5,40),M.sBt,0,0,0,Math.PI/2,0,0,g);
+  for(let i=0;i<6;i++){const a=i*Math.PI/3;const tb=new THREE.Mesh(BX(.09,.12,.06),M.sDk);tb.position.set(Math.cos(a)*r,Math.sin(a)*r,0);tb.rotation.z=a;g.add(tb);}
+  for(let i=0;i<6;i++){const a=i*Math.PI/3+Math.PI/6;const bl=new THREE.Mesh(CY(.018,.018,.07,8),M.sBt);bl.position.set(Math.cos(a)*(r+.022),Math.sin(a)*(r+.022),0);bl.rotation.x=Math.PI/2;g.add(bl);}
   return g;
 }
 
-// ── Valve Helper ──────────────────────────────────────────────────────────
-function addValve(x, y, z, type = 'solenoid', ry = 0) {
-  const g = new THREE.Group();
-  g.position.set(x, y, z);
-  g.rotation.y = ry;
-  scene.add(g);
-  if (type === 'solenoid') {
-    addMesh(bx(0.14, 0.14, 0.18), blueM, { parent: g });
-    addMesh(cyl(0.045, 0.045, 0.09, 8), steelBrt, { y: 0.12, parent: g });
-    addMesh(bx(0.1, 0.04, 0.06), blackM, { y: 0.17, parent: g });
-  } else if (type === 'check') {
-    addMesh(cyl(0.065, 0.065, 0.14, 12), greenM, { rx: Math.PI / 2, parent: g });
-    addMesh(tor(0.065, 0.012, 8, 16), steelBrt, { rx: Math.PI / 2, z: 0.07, parent: g });
-  } else if (type === 'manual') {
-    addMesh(cyl(0.065, 0.065, 0.14, 12), steelM, { rx: Math.PI / 2, parent: g });
-    addMesh(cyl(0.055, 0.01, 0.12, 4), redM, { y: 0.12, parent: g });
-  } else if (type === 'regulator') {
-    addMesh(cyl(0.09, 0.09, 0.18, 16), steelBrt, { rx: Math.PI / 2, parent: g });
-    addMesh(sph(0.085, 12, 10), alumM, { parent: g });
-    addMesh(cyl(0.04, 0.04, 0.1, 8), steelDark, { y: 0.1, parent: g });
-  }
-  return g;
+// Tube between points
+function tube(pts,mat,r=.03,seg=60,par=scene){
+  const g=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),seg,r,8);
+  const m=new THREE.Mesh(g,mat); par.add(m); return m;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  BASE FRAME
-// ═══════════════════════════════════════════════════════════════════════════
-const baseGroup = new THREE.Group();
-scene.add(baseGroup);
+// ═══════════════════════════════════════════════════════════════
+// LAYOUT — from reference photos:
+// X axis: LEFT(blower) → RIGHT(nozzle)  along the main rig
+// The blower is at x≈-7, nozzle exit at x≈+5
+// Tanks sit on the frame to the LEFT side at Z≈-1.5..+1.5
+// Control panel/DAQ stand at x≈+5..+7, RIGHT end
+// ═══════════════════════════════════════════════════════════════
 
-addMesh(bx(9, 0.08, 4.2), steelDark, { y: 0, parent: baseGroup });
-addMesh(bx(9, 0.07, 0.08), steelM, { y: 0.07, z: 2.0,  parent: baseGroup });
-addMesh(bx(9, 0.07, 0.08), steelM, { y: 0.07, z: -2.0, parent: baseGroup });
-addMesh(bx(0.08, 0.07, 4.2), steelM, { y: 0.07, x: 4.4,  parent: baseGroup });
-addMesh(bx(0.08, 0.07, 4.2), steelM, { y: 0.07, x: -4.4, parent: baseGroup });
+// ═══════════════════════════════════════════════════════════════
+// BASE FRAME (long steel table, blue rails)
+// ═══════════════════════════════════════════════════════════════
+const frameMat=new THREE.MeshStandardMaterial({color:0x1a2a4a,metalness:.85,roughness:.3});
+const frameTop=new THREE.MeshStandardMaterial({color:0x223355,metalness:.8,roughness:.35});
+// Main platform
+add(BX(17,.1,4.8),frameMat,0,.04,0);
+// Long rails
+for(const z of [-2.3,2.3]) add(BX(17,.08,.09),M.sM,0,.1,z);
+for(const x of [-8,8]) add(BX(.09,.08,4.8),M.sM,x,.1,0);
+// Cross members every 1.5m
+for(let x=-7;x<=7;x+=1.5) add(BX(.07,.07,4.8),M.sM,x,.09,0);
+// Frame legs with adjustable pads
+for(const[lx,lz] of [[-8,-2.2],[-8,2.2],[-4,-2.2],[-4,2.2],[0,-2.2],[0,2.2],[4,-2.2],[4,2.2],[8,-2.2],[8,2.2]]){
+  add(CY(.075,.075,1.6,8),M.sM,lx,-.84,lz);
+  for(let j=0;j<3;j++) add(TR(.075,.007,4,12),M.sBt,lx,-.5+j*.09,lz);
+  add(CY(.13,.13,.07,12),M.sDk,lx,-1.67,lz);
+  add(CY(.10,.10,.055,12),M.rb,lx,-1.71,lz);
+}
+// Cable tray panels along front
+add(BX(15,.05,.32),M.sDk,0,.09,-2.1);
+add(BX(15,.05,.32),M.sDk,0,.09,2.1);
+for(let x=-7;x<=7;x+=.5){
+  add(BX(.02,.05,.32),M.sDk,x,.1,-2.1);
+  add(BX(.02,.05,.32),M.sDk,x,.1,2.1);
+}
 
-[[-4.1, -1.9], [-4.1, 1.9], [4.1, -1.9], [4.1, 1.9]].forEach(([lx, lz]) => {
-  addMesh(cyl(0.065, 0.065, 1.4, 8), steelM, { x: lx, y: -0.74, z: lz, parent: baseGroup });
-  addMesh(cyl(0.11, 0.11, 0.07, 16), steelDark, { x: lx, y: -1.45, z: lz, parent: baseGroup });
-  addMesh(cyl(0.09, 0.09, 0.05, 16), rubberM, { x: lx, y: -1.49, z: lz, parent: baseGroup });
+// ═══════════════════════════════════════════════════════════════
+// CENTRIFUGAL BLOWER  — at LEFT end, x≈-6.5
+// Like reference: side-discharge centrifugal fan, motor on side
+// ═══════════════════════════════════════════════════════════════
+const BLOX=-6.5, BLOY=1.2;
+const blG=new THREE.Group(); blG.position.set(BLOX,BLOY,0); scene.add(blG);
+
+// Volute casing (scroll housing) — flat disc shape
+const vMat=new THREE.MeshStandardMaterial({color:0x3a4a5c,metalness:.85,roughness:.28});
+add(CY(.62,.62,.48,48),vMat,0,0,0,Math.PI/2,0,0,blG);
+add(TR(.62,.026,8,48),M.sBt,0,0,.25,Math.PI/2,0,0,blG);
+add(TR(.62,.026,8,48),M.sBt,0,0,-.25,Math.PI/2,0,0,blG);
+// Scroll outlet duct — goes UP then RIGHT (side discharge)
+add(CY(.22,.22,.55,20),vMat,.5,.52,0,0,0,Math.PI/2,blG);
+add(TR(.22,.022,8,28),M.sBt,.78,.52,0,0,0,Math.PI/2,blG);
+add(CY(.22,.22,.9,20),vMat,.62,.95,0,0,0,0,blG); // vertical section up
+add(TR(.22,.022,8,28),M.sBt,.62,1.42,0,0,0,0,blG);
+add(CY(.22,.22,1.4,20),vMat,1.32,1.42,0,Math.PI/2,0,Math.PI/2,blG); // horizontal to rig axis
+
+// Inlet bell mouth (front face)
+add(CY(.22,.58,.28,36),M.al,0,0,-.38,Math.PI/2,0,0,blG);
+add(TR(.22,.018,8,36),M.sBt,0,0,-.54,Math.PI/2,0,0,blG);
+// Inlet screen grid
+add(CY(.22,.22,.02,36),M.sDk,0,0,-.55,Math.PI/2,0,0,blG);
+for(let i=0;i<8;i++) add(BX(.02,.44,.015),M.sDk,0,0,-.55,Math.PI/2,i*Math.PI/8,0,blG);
+
+// Motor body (side-mounted, like reference photos — blue motor)
+const motMat=new THREE.MeshStandardMaterial({color:0x1a3060,metalness:.75,roughness:.35});
+add(BX(.9,.88,.88),motMat,-.72,0,0,0,0,0,blG);
+// Motor cooling fins
+for(let i=0;i<7;i++) add(BX(.88,.03,.88),M.sDk,-.72,-.36+i*.12,0,0,0,0,blG);
+// Motor terminal box
+add(BX(.22,.14,.08),M.sDk,-.72,.52,0,0,0,0,blG);
+// Motor shaft coupling
+add(CY(.07,.07,.18,12),M.sBt,-.28,0,0,0,0,Math.PI/2,blG);
+add(TR(.07,.014,6,12),M.sBt,-.12,0,0,Math.PI/2,0,0,blG);
+// Motor feet
+for(const[mx,mz] of [[-.72,.38],[-.72,-.38]]){
+  add(BX(.9,.06,.12),M.sDk,mx,-.5,mz,0,0,0,blG);
+  add(CY(.05,.05,.06,8),M.sDk,mx-.3,-.56,mz,0,0,0,blG);
+  add(CY(.05,.05,.06,8),M.sDk,mx+.3,-.56,mz,0,0,0,blG);
+}
+
+// Fan impeller (inside volute)
+const fanG=new THREE.Group(); blG.add(fanG);
+add(CY(.12,.12,.07,20),M.sBt,0,0,0,0,0,0,fanG);
+add(CY(.08,.08,.055,20),M.sDk,0,0,0,0,0,0,fanG);
+for(let i=0;i<10;i++){
+  const a=i*Math.PI*2/10, bG=new THREE.Group(); bG.rotation.z=a; fanG.add(bG);
+  const b=new THREE.Mesh(BX(.3,.055,.022),M.al); b.position.set(.18,0,0); b.rotation.y=.24; bG.add(b);
+  const t2=new THREE.Mesh(BX(.06,.05,.02),M.al); t2.position.set(.29,0,0); t2.rotation.y=.4; bG.add(t2);
+}
+add(CY(.44,.44,.022,36),M.sDk,0,0,-.04,0,0,0,fanG);
+
+// ─ Connecting duct: blower outlet → preheater inlet
+// From blower outlet at BLOX+1.94, BLOY+1.42 going right
+const PHOX=-3.5, PHOY=1.2;
+// Horizontal connecting duct
+add(CY(.2,.2,.9,20),M.sM,BLOX+2.5,BLOY+1.42,0,Math.PI/2,0,Math.PI/2);
+clamp(BLOX+2.05,BLOY+1.42,0,.22);
+clamp(BLOX+2.97,BLOY+1.42,0,.22);
+
+// ═══════════════════════════════════════════════════════════════
+// PREHEATER  — x≈-3.5, transparent glass cylinder with coils
+// ═══════════════════════════════════════════════════════════════
+const phG=new THREE.Group(); phG.position.set(PHOX,PHOY,0); scene.add(phG);
+
+// Glass outer shell
+add(CY(.38,.38,1.2,52),glassPH,0,0,0,Math.PI/2,0,0,phG);
+// Metal end flanges
+for(const z of [-.64,.64]) add(CY(.38,.38,.05,40),M.sM,0,0,z,Math.PI/2,0,0,phG);
+// Structural rings
+for(const z of [-.4,-.15,.1,.35]) add(TR(.38,.018,6,48),M.sDk,0,0,z,Math.PI/2,0,0,phG);
+// End caps connection stubs
+for(const z of [-.68,.68]) add(CY(.22,.22,.06,28),M.sBt,0,0,z,Math.PI/2,0,0,phG);
+
+// HEATING COILS — dense spiral wound, like reference (warm copper/orange glow)
+const coilMats=[];
+for(let ci=0;ci<5;ci++){
+  const r=.09+ci*.048, pts=[];
+  for(let i=0;i<=420;i++){
+    const t=i/420, ang=t*Math.PI*22;
+    pts.push(new THREE.Vector3(Math.cos(ang)*r,Math.sin(ang)*r,t*1.12-.56));
+  }
+  const cm=new THREE.MeshStandardMaterial({color:0x553322,metalness:.65,roughness:.4,emissive:new THREE.Color(0x000000),emissiveIntensity:0});
+  const cg=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),420,.010,7);
+  const cmesh=new THREE.Mesh(cg,cm); phG.add(cmesh); coilMats.push(cm);
+}
+// Center support rod
+add(CY(.05,.05,1.1,10),M.sDk,0,0,0,Math.PI/2,0,0,phG);
+// Power supply leads
+for(const z of [-.55,.55]) add(CY(.028,.028,.22,8),M.cop,0,.32,z,0,0,Math.PI/2,phG);
+
+clamp(PHOX-.66,PHOY,0,.38);
+clamp(PHOX+.66,PHOY,0,.38);
+
+// Air flow sensor on inlet duct (between blower and preheater)
+add(BX(.16,.1,.1),M.pan,BLOX+2.5,BLOY+1.42,.22);
+add(BX(.14,.08,.015),new THREE.MeshStandardMaterial({color:0x001a33,emissive:new THREE.Color(0x003a6a),emissiveIntensity:.7}),BLOX+2.5,BLOY+1.52,.28);
+const afsLed=mkLed(0x00aaff,.6);
+add(SP(.018,8,8),afsLed,BLOX+2.5,BLOY+1.62,.22);
+
+// ═══════════════════════════════════════════════════════════════
+// COMBUSTION CHAMBER  — x≈-1 to +3, center of rig
+// ═══════════════════════════════════════════════════════════════
+const CHX=.5, CHY=1.2;
+const chG=new THREE.Group(); chG.position.set(CHX,CHY,0); scene.add(chG);
+
+// OUTER GLASS CYLINDER — large, clear
+add(CY(.5,.5,3.0,64),glassM,0,0,0,Math.PI/2,0,0,chG);
+// Structural stainless rings every 0.25m
+for(let z=-1.35;z<=1.35;z+=.25) add(TR(.5,.024,7,52),M.sBt,0,0,z,Math.PI/2,0,0,chG);
+// Heavy flanged end caps
+for(const z of [-1.52,1.52]){
+  add(CY(.56,.56,.06,44),M.sM,0,0,z,Math.PI/2,0,0,chG);
+  for(let i=0;i<12;i++){const a=i*Math.PI/6;add(CY(.024,.024,.075,8),M.sBt,Math.cos(a)*.52,Math.sin(a)*.52,z,Math.PI/2,0,0,chG);}
+}
+
+// INTERNAL LINER — perforated
+const linMat=new THREE.MeshStandardMaterial({color:0x3a5060,metalness:.82,roughness:.32,transparent:true,opacity:.5,side:THREE.DoubleSide});
+add(CY(.38,.38,2.8,56),linMat,0,0,0,Math.PI/2,0,0,chG);
+for(const z of [-.85,-.2,.45,1.1]) add(TR(.38,.016,6,52),M.sDk,0,0,z,Math.PI/2,0,0,chG);
+// Zone dividers
+for(const z of [-.18,.62]) add(CY(.382,.382,.028,48),M.sM,0,0,z,Math.PI/2,0,0,chG);
+
+// Perforation rings (dilution holes effect)
+const holMat=new THREE.MeshStandardMaterial({color:0x1a2a38,metalness:.9,roughness:.2,transparent:true,opacity:.6});
+for(let zi=0;zi<6;zi++) add(TR(.38,.015,6,52),holMat,0,0,-1.1+zi*.22,Math.PI/2,0,0,chG);
+for(let ai=0;ai<20;ai++){const a=ai/20*Math.PI*2;add(CY(.018,.018,.06,6),holMat,Math.cos(a)*.38,Math.sin(a)*.38,.58,0,a+Math.PI/2,Math.PI/2,chG);}
+
+// ZONE GLOW VOLUMES
+add(CY(.375,.375,1.0,52),pGM,0,0,-.72,Math.PI/2,0,0,chG);
+add(CY(.375,.375,.82,52),sGM,0,0,.12,Math.PI/2,0,0,chG);
+add(CY(.375,.375,.65,52),dGM,0,0,.82,Math.PI/2,0,0,chG);
+
+// ── SENSOR PORTS (top of chamber, pointing upward) ──────────────
+const sensorLeds=[];
+// T1–T4 thermocouples on TOP
+const tcZ=[-1.1,-.55,.0,.65];
+tcZ.forEach((z,i)=>{
+  const pg=new THREE.Group(); pg.position.set(0,.5,z); chG.add(pg);
+  add(CY(.024,.024,.14,8),M.sBt,0,.07,0,0,0,0,pg);
+  add(CY(.04,.04,.028,12),M.sDk,0,.16,0,0,0,0,pg);
+  add(CY(.03,.03,.12,8),M.cop,0,.22,0,0,0,0,pg); // TC wire
+  const lm=mkLed(0x00ff88,0);
+  add(SP(.018,8,8),lm,0,.3,0,0,0,0,pg);
+  sensorLeds.push(lm);
+});
+// P1,P2 pressure ports on BOTTOM
+[-.72,.72].forEach((z,i)=>{
+  const pg=new THREE.Group(); pg.position.set(0,-.5,z); chG.add(pg);
+  add(CY(.024,.024,.14,8),M.sBt,0,-.07,0,0,0,0,pg);
+  add(BX(.055,.055,.055),M.pan,0,-.18,0,0,0,0,pg);
+  add(CY(.016,.016,.1,8),M.cop,0,-.28,0,0,0,0,pg);
+  const lm2=mkLed(0x00aaff,0);
+  add(SP(.018,8,8),lm2,0,-.36,0,0,0,0,pg);
+  sensorLeds.push(lm2);
 });
 
-addMesh(bx(9, 0.05, 0.06), steelDark, { y: -0.75, z: 0, parent: baseGroup });
-addMesh(bx(0.06, 0.05, 4.2), steelDark, { y: -0.75, x: 0, parent: baseGroup });
-
-addMesh(bx(6.5, 0.04, 0.32), steelDark, { y: 0.06, z: 1.85, parent: baseGroup });
-addMesh(bx(6.5, 0.04, 0.32), steelDark, { y: 0.06, z: -1.85, parent: baseGroup });
-for (let i = -3; i <= 3; i++) {
-  addMesh(bx(0.02, 0.04, 0.32), steelDark, { x: i, y: 0.07, z: 1.85, parent: baseGroup });
-  addMesh(bx(0.02, 0.04, 0.32), steelDark, { x: i, y: 0.07, z: -1.85, parent: baseGroup });
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  BLOWER / FAN MODULE
-// ═══════════════════════════════════════════════════════════════════════════
-const blowerGroup = new THREE.Group();
-blowerGroup.position.set(-3.7, 0.85, 0);
-scene.add(blowerGroup);
-
-addMesh(cyl(0.44, 0.44, 0.55, 40), steelDark, { rx: Math.PI / 2, parent: blowerGroup });
-addMesh(tor(0.44, 0.022, 8, 40), steelBrt, { z:  0.28, rx: Math.PI / 2, parent: blowerGroup });
-addMesh(tor(0.44, 0.022, 8, 40), steelBrt, { z: -0.28, rx: Math.PI / 2, parent: blowerGroup });
-addMesh(bx(0.12, 0.3, 0.02), steelM, { x: 0.42, y: 0.1, parent: blowerGroup });
-addMesh(cyl(0.18, 0.44, 0.28, 32), alumM, { z: -0.4, rx: Math.PI / 2, parent: blowerGroup });
-addMesh(tor(0.18, 0.018, 8, 32), steelBrt, { z: -0.53, rx: Math.PI / 2, parent: blowerGroup });
-addMesh(cyl(0.22, 0.22, 0.45, 20), steelM, { x: 0.44, y: 0.35, rx: Math.PI / 2, ry: Math.PI / 6, parent: blowerGroup });
-addMesh(cyl(0.18, 0.18, 0.42, 20), blackM, { z: -0.6, rx: Math.PI / 2, parent: blowerGroup });
-addMesh(cyl(0.07, 0.07, 0.12, 12), steelDark, { z: -0.83, rx: Math.PI / 2, parent: blowerGroup });
-for (let i = 0; i < 8; i++) {
-  const a = i * Math.PI / 4;
-  addMesh(bx(0.025, 0.04, 0.35), blackM, { x: Math.cos(a) * 0.18, y: Math.sin(a) * 0.18, z: -0.6, rx: Math.PI / 2, parent: blowerGroup });
-}
-
-const fanHub = new THREE.Group();
-blowerGroup.add(fanHub);
-addMesh(cyl(0.09, 0.09, 0.06, 20), steelBrt, { parent: fanHub });
-for (let i = 0; i < 8; i++) {
-  const a = i * Math.PI * 2 / 8;
-  const bGeo = new THREE.BoxGeometry(0.28, 0.065, 0.025);
-  const blade = new THREE.Mesh(bGeo, alumM);
-  blade.rotation.z = a + 0.25;
-  blade.position.set(Math.cos(a) * 0.17, Math.sin(a) * 0.17, 0);
-  fanHub.add(blade);
-}
-
-clampRing(-3.1, 0.85, 0);
-addMesh(cyl(0.15, 0.15, 0.9, 16), steelM, { x: -2.8, y: 0.85, rx: Math.PI / 2, ry: Math.PI / 2 });
-addMesh(cyl(0.22, 0.22, 0.26, 20), steelBrt, { x: -2.28, y: 0.85, rx: Math.PI / 2, ry: Math.PI / 2 });
-addMesh(bx(0.38, 0.13, 0.11), blueM.clone(), { x: -2.28, y: 1.03, z: 0 });
-addMesh(cyl(0.04, 0.04, 0.1, 8), steelDark, { x: -2.28, y: 1.16, z: 0 });
-addMesh(cyl(0.15, 0.15, 0.7, 16), steelM, { x: -1.78, y: 0.85, rx: Math.PI / 2, ry: Math.PI / 2 });
-clampRing(-1.37, 0.85, 0);
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  PREHEATER MODULE
-// ═══════════════════════════════════════════════════════════════════════════
-const preheaterGroup = new THREE.Group();
-preheaterGroup.position.set(-0.85, 0.85, 0);
-scene.add(preheaterGroup);
-
-addMesh(cyl(0.32, 0.32, 1.0, 40), glassM2, { rx: Math.PI / 2, parent: preheaterGroup });
-addMesh(cyl(0.32, 0.32, 0.045, 32), steelM, { z:  0.52, rx: Math.PI / 2, parent: preheaterGroup });
-addMesh(cyl(0.32, 0.32, 0.045, 32), steelM, { z: -0.52, rx: Math.PI / 2, parent: preheaterGroup });
-addMesh(tor(0.32, 0.016, 8, 40), steelDark, { z:  0.25, rx: Math.PI / 2, parent: preheaterGroup });
-addMesh(tor(0.32, 0.016, 8, 40), steelDark, { z: -0.25, rx: Math.PI / 2, parent: preheaterGroup });
-
-const coilMeshes = [];
-for (let ci = 0; ci < 3; ci++) {
-  const r = 0.12 + ci * 0.05;
-  const pts = [];
-  for (let i = 0; i <= 280; i++) {
-    const t = i / 280;
-    const ang = t * Math.PI * 14;
-    pts.push(new THREE.Vector3(Math.cos(ang) * r, Math.sin(ang) * r, t * 0.85 - 0.42));
-  }
-  const coilGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 280, 0.011, 8);
-  const coilMat = new THREE.MeshStandardMaterial({
-    color: 0x553322, metalness: 0.6, roughness: 0.4,
-    emissive: new THREE.Color(0x000000), emissiveIntensity: 0
-  });
-  const cm = new THREE.Mesh(coilGeo, coilMat);
-  preheaterGroup.add(cm);
-  coilMeshes.push(cm);
-}
-
-addMesh(cyl(0.04, 0.04, 0.15, 8), copperM, { x: 0.3, rx: Math.PI / 2, rz: Math.PI / 2, parent: preheaterGroup });
-addMesh(cyl(0.04, 0.04, 0.15, 8), copperM, { x: -0.3, rx: Math.PI / 2, rz: Math.PI / 2, parent: preheaterGroup });
-
-clampRing(-0.32, 0.85, 0);
-clampRing(-1.38, 0.85, 0);
-addMesh(cyl(0.15, 0.15, 0.38, 16), steelM, { x: -0.11, y: 0.85, rx: Math.PI / 2, ry: Math.PI / 2 });
-clampRing(0.1, 0.85, 0);
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  COMBUSTION CHAMBER
-// ═══════════════════════════════════════════════════════════════════════════
-const chamberGroup = new THREE.Group();
-chamberGroup.position.set(2.2, 0.85, 0);
-scene.add(chamberGroup);
-
-addMesh(cyl(0.41, 0.41, 2.4, 48), glassM, { rx: Math.PI / 2, parent: chamberGroup });
-addMesh(cyl(0.46, 0.46, 0.05, 36), steelM, { z:  1.23, rx: Math.PI / 2, parent: chamberGroup });
-addMesh(cyl(0.46, 0.46, 0.05, 36), steelM, { z: -1.23, rx: Math.PI / 2, parent: chamberGroup });
-for (let i = 0; i < 8; i++) {
-  const a = i * Math.PI / 4;
-  addMesh(cyl(0.025, 0.025, 0.06, 8), steelDark, { x: Math.cos(a) * 0.43, y: Math.sin(a) * 0.43, z: 1.25, rx: Math.PI / 2, parent: chamberGroup });
-  addMesh(cyl(0.025, 0.025, 0.06, 8), steelDark, { x: Math.cos(a) * 0.43, y: Math.sin(a) * 0.43, z: -1.25, rx: Math.PI / 2, parent: chamberGroup });
-}
-
-const linerMat = new THREE.MeshStandardMaterial({ color: 0x445566, metalness: 0.75, roughness: 0.35, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
-addMesh(cyl(0.3, 0.3, 2.1, 48), linerMat, { rx: Math.PI / 2, parent: chamberGroup });
-
-for (let i = 0; i < 12; i++) {
-  const pm = new THREE.MeshStandardMaterial({ color: 0x1a2a38, metalness: 0.9, roughness: 0.2, transparent: true, opacity: 0.7 });
-  addMesh(tor(0.3, 0.012, 6, 48), pm, { z: -0.95 + i * 0.17, rx: Math.PI / 2, parent: chamberGroup });
-}
-
-const primMat = new THREE.MeshStandardMaterial({ color: 0xff3300, emissive: new THREE.Color(0xff1100), emissiveIntensity: 0, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
-const secMat  = new THREE.MeshStandardMaterial({ color: 0xff7700, emissive: new THREE.Color(0xff5500), emissiveIntensity: 0, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
-const dilMat  = new THREE.MeshStandardMaterial({ color: 0x4488cc, emissive: new THREE.Color(0x223366), emissiveIntensity: 0, transparent: true, opacity: 0.0, side: THREE.DoubleSide });
-
-const primZone = addMesh(cyl(0.295, 0.295, 0.82, 48), primMat, { z: -0.52, rx: Math.PI / 2, parent: chamberGroup });
-const secZone  = addMesh(cyl(0.295, 0.295, 0.72, 48), secMat,  { z:  0.22, rx: Math.PI / 2, parent: chamberGroup });
-const dilZone  = addMesh(cyl(0.295, 0.295, 0.56, 48), dilMat,  { z:  0.84, rx: Math.PI / 2, parent: chamberGroup });
-
-const zdm = new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.85, roughness: 0.25, transparent: true, opacity: 0.55 });
-addMesh(tor(0.3, 0.02, 8, 36), zdm, { z: -0.13, rx: Math.PI / 2, parent: chamberGroup });
-addMesh(tor(0.3, 0.02, 8, 36), zdm, { z:  0.58, rx: Math.PI / 2, parent: chamberGroup });
-
-const sensorLEDs = [];
-const portDefs = [
-  { z: -0.88, ang: Math.PI * 0.5,  label: 'T1' },
-  { z: -0.38, ang: Math.PI * 0.5,  label: 'T2' },
-  { z:  0.22, ang: Math.PI * 0.5,  label: 'T3' },
-  { z:  0.82, ang: Math.PI * 0.5,  label: 'T4' },
-  { z: -0.55, ang: Math.PI * 1.5,  label: 'P1' },
-  { z:  0.7,  ang: Math.PI * 1.5,  label: 'P2' },
+// ── FUEL INLET PORTS (top of chamber) — AIR(blue), H2(red), KERO(yellow) ──
+const fuelPortsData=[
+  {z:-1.05,col:0x2266cc,name:'A'},
+  {z:-.40, col:0xcc1111,name:'H'},
+  {z:.22,  col:0xcc8800,name:'K'},
 ];
-portDefs.forEach(({ z, ang, label }) => {
-  const pg = new THREE.Group();
-  pg.position.set(Math.cos(ang) * 0.41, Math.sin(ang) * 0.41, z);
-  pg.rotation.set(Math.PI / 2, 0, ang);
-  chamberGroup.add(pg);
-  addMesh(cyl(0.022, 0.022, 0.09, 8), steelBrt, { y: 0.045, parent: pg });
-  addMesh(cyl(0.038, 0.038, 0.024, 12), steelDark, { y: 0.098, parent: pg });
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), makeLED(0x00ff88, 0));
-  led.position.set(0, 0.112, 0);
-  pg.add(led);
-  sensorLEDs.push(led);
+fuelPortsData.forEach(({z,col})=>{
+  const fMat=new THREE.MeshStandardMaterial({color:col,metalness:.7,roughness:.3});
+  const pg=new THREE.Group(); pg.position.set(0,.5,z); chG.add(pg);
+  add(CY(.028,.028,.16,10),M.sBt,0,.08,0,0,0,0,pg);
+  add(TR(.028,.008,6,14),M.sBt,0,.02,0,0,0,0,pg);
+  add(TR(.028,.008,6,14),M.sBt,0,.14,0,0,0,0,pg);
+  add(CY(.036,.036,.04,10),fMat,0,.18,0,0,0,0,pg);
+  // Color-coded rising tube
+  add(CY(.022,.022,.35,8),fMat,0,.37,0,0,0,0,pg);
 });
 
-const fdg = new THREE.Group();
-fdg.position.set(-0.41, 0, -0.55);
-fdg.rotation.z = -Math.PI / 2;
-chamberGroup.add(fdg);
-addMesh(cyl(0.035, 0.035, 0.14, 10), steelBrt, { parent: fdg });
-addMesh(cyl(0.052, 0.018, 0.07, 10), blueM, { y: 0.1, parent: fdg });
-const fdLED = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), makeLED(0x0044ff, 0.5));
-fdLED.position.set(0, 0.14, 0); fdg.add(fdLED);
+// Flame detector (side port)
+const fdG=new THREE.Group(); fdG.position.set(-.5,0,-1.0); fdG.rotation.z=-Math.PI/2; chG.add(fdG);
+add(CY(.036,.036,.18,10),M.sBt,0,0,0,0,0,0,fdG);
+add(CY(.055,.02,.09,10),new THREE.MeshStandardMaterial({color:0x1155bb,metalness:.7,roughness:.3}),0,.12,0,0,0,0,fdG);
+const fdLed=mkLed(0x0044ff,.5); add(SP(.022,8,8),fdLed,0,.16,0,0,0,0,fdG);
 
-const ign = new THREE.Group();
-ign.position.set(0, -0.41, -0.65);
-ign.rotation.x = Math.PI / 2;
-chamberGroup.add(ign);
-addMesh(cyl(0.03, 0.03, 0.18, 8), steelBrt, { parent: ign });
-addMesh(cyl(0.022, 0.012, 0.08, 8), copperM, { y: -0.13, parent: ign });
-addMesh(cyl(0.042, 0.042, 0.025, 12), steelDark, { y: 0.1, parent: ign });
+// Igniter
+const ignG=new THREE.Group(); ignG.position.set(0,-.5,-1.1); ignG.rotation.x=Math.PI/2; chG.add(ignG);
+add(CY(.032,.032,.22,8),M.sBt,0,0,0,0,0,0,ignG);
+add(CY(.025,.014,.1,8),M.cop,0,-.14,0,0,0,0,ignG);
+add(CY(.044,.044,.03,12),M.sDk,0,.12,0,0,0,0,ignG);
 
-const sparkMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: new THREE.Color(0xffffff), emissiveIntensity: 3 });
-const sparkMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.05), sparkMat);
-sparkMesh.position.set(0, -0.35, -0.65);
-chamberGroup.add(sparkMesh);
-sparkMesh.visible = false;
+clamp(CHX-1.58,CHY,0,.5);
+clamp(CHX+1.58,CHY,0,.5);
 
-const flamePoints = [];
-for (let i = 0; i <= 12; i++) {
-  const t = i / 12;
-  flamePoints.push(new THREE.Vector2(Math.sin(t * Math.PI) * 0.2, t * 0.7 - 0.12));
+// ── REALISTIC FLAME ──────────────────────────────────────────
+// Spark
+const sparkM=new THREE.MeshStandardMaterial({color:0xffffff,emissive:new THREE.Color(0xffffff),emissiveIntensity:6});
+const spark=new THREE.Mesh(new THREE.OctahedronGeometry(.055,1),sparkM);
+spark.position.set(0,-.42,-1.1); chG.add(spark); spark.visible=false;
+
+// Flame — multi-layer (blue core → orange mid → yellow outer → wisps)
+// Blue-white core
+const fCore=()=>{const p=[];for(let i=0;i<=18;i++){const t=i/18;p.push(new THREE.Vector2(Math.pow(Math.sin(t*Math.PI),.7)*.12,t*.8-.08));}return new THREE.LatheGeometry(p,16);};
+const flCoreMat=new THREE.MeshStandardMaterial({color:0xffffff,emissive:new THREE.Color(0x88ccff),emissiveIntensity:5,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
+const flCore=new THREE.Mesh(fCore(),flCoreMat); flCore.position.set(0,0,-.7); flCore.rotation.x=Math.PI/2; chG.add(flCore);
+
+// Orange middle flame
+const fMid=()=>{const p=[];for(let i=0;i<=22;i++){const t=i/22;p.push(new THREE.Vector2(Math.pow(Math.sin(t*Math.PI),.62)*.24,t*1.4-.15));}return new THREE.LatheGeometry(p,20);};
+const flMidMat=new THREE.MeshStandardMaterial({color:0xff6600,emissive:new THREE.Color(0xff3300),emissiveIntensity:3,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
+const flMid=new THREE.Mesh(fMid(),flMidMat); flMid.position.set(0,0,-.72); flMid.rotation.x=Math.PI/2; chG.add(flMid);
+
+// Outer envelope
+const fOut=()=>{const p=[];for(let i=0;i<=22;i++){const t=i/22;p.push(new THREE.Vector2(Math.pow(Math.sin(t*Math.PI),.52)*.38,t*2.0-.2));}return new THREE.LatheGeometry(p,18);};
+const flOutMat=new THREE.MeshStandardMaterial({color:0xff9900,emissive:new THREE.Color(0xff6600),emissiveIntensity:1.8,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
+const flOut=new THREE.Mesh(fOut(),flOutMat); flOut.position.set(0,0,-.75); flOut.rotation.x=Math.PI/2; chG.add(flOut);
+
+// Yellow tip
+const fTip=()=>{const p=[];for(let i=0;i<=14;i++){const t=i/14;p.push(new THREE.Vector2(Math.pow(Math.sin(t*Math.PI),.45)*.18,t*1.2-.1));}return new THREE.LatheGeometry(p,14);};
+const flTipMat=new THREE.MeshStandardMaterial({color:0xffdd00,emissive:new THREE.Color(0xffaa00),emissiveIntensity:2,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
+const flTip=new THREE.Mesh(fTip(),flTipMat); flTip.position.set(0,0,-.68); flTip.rotation.x=Math.PI/2; chG.add(flTip);
+
+// Wisps (tendrils)
+const wisps=[];
+for(let i=0;i<22;i++){
+  const p=[];for(let j=0;j<=10;j++){const t=j/10;p.push(new THREE.Vector2(Math.sin(t*Math.PI)*(.03+Math.random()*.1),t*(.4+Math.random()*.5)));}
+  const wm=new THREE.MeshStandardMaterial({color:0xff6600,emissive:new THREE.Color(0xff4400),emissiveIntensity:1.5+Math.random(),transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false});
+  const w=new THREE.Mesh(new THREE.LatheGeometry(p,8),wm);
+  const ang=i/22*Math.PI*2,r=.04+Math.random()*.16;
+  w.position.set(Math.cos(ang)*r,Math.sin(ang)*r,-.5-Math.random()*.4);
+  w.rotation.set(Math.PI/2,0,ang);
+  chG.add(w); wisps.push({m:w,mat:wm,ph:Math.random()*Math.PI*2,sp:.7+Math.random()*.7});
 }
-const flameGeo = new THREE.LatheGeometry(flamePoints, 20);
-const flameMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: new THREE.Color(0xff3300), emissiveIntensity: 2.5, transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false });
-const flameMesh = new THREE.Mesh(flameGeo, flameMat);
-flameMesh.position.set(0, 0, -0.3);
-flameMesh.rotation.x = Math.PI / 2;
-chamberGroup.add(flameMesh);
-flameMesh.visible = false;
 
-clampRing(1.07, 0.85, 0);
-clampRing(3.34, 0.85, 0);
+// ═══════════════════════════════════════════════════════════════
+// EXHAUST NOZZLE  — x≈+2.1, converging
+// ═══════════════════════════════════════════════════════════════
+const NZX=3.3;
+clamp(NZX-1.62,CHY,0,.5);
+// Transition
+add(CY(.5,.26,.7,44),M.sM,NZX,CHY,0,Math.PI/2,0,Math.PI/2);
+add(TR(.5,.022,7,44),M.sBt,NZX-.37,CHY,0,Math.PI/2,0,0);
+// Throat
+add(CY(.26,.14,.48,36),M.sDk,NZX+.37,CHY,0,Math.PI/2,0,Math.PI/2);
+// Exit
+add(CY(.14,.11,.32,30),M.sM,NZX+.73,CHY,0,Math.PI/2,0,Math.PI/2);
+add(TR(.14,.016,7,30),M.sBt,NZX+.9,CHY,0,Math.PI/2,0,0);
+// Support brackets
+for(const z of [-.32,.32]) add(BX(.055,.35,.055),M.sDk,NZX+.4,CHY-.2,z);
+// Exhaust temp sensor ring
+add(TR(.14,.018,6,28),M.cop,NZX+.88,CHY,0,Math.PI/2,0,0);
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  EXHAUST NOZZLE
-// ═══════════════════════════════════════════════════════════════════════════
-addMesh(cyl(0.41, 0.22, 0.58, 36), steelM, { x: 3.63, y: 0.85, rx: Math.PI / 2, ry: Math.PI / 2 });
-addMesh(cyl(0.22, 0.1, 0.36, 28), steelDark, { x: 4.08, y: 0.85, rx: Math.PI / 2, ry: Math.PI / 2 });
-addMesh(tor(0.1, 0.016, 8, 28), steelBrt, { x: 4.27, y: 0.85, rx: Math.PI / 2 });
-addMesh(bx(0.04, 0.45, 0.04), steelDark, { x: 4.0, y: 0.6, z: 0.3 });
-addMesh(bx(0.04, 0.45, 0.04), steelDark, { x: 4.0, y: 0.6, z: -0.3 });
+// ═══════════════════════════════════════════════════════════════
+// FUEL TANKS  — on the LEFT side of the frame, at base level
+// Per reference photos: Kerosene(yellow) | H2(red) | Air(blue)
+// lined up left-to-right sitting on the platform
+// ═══════════════════════════════════════════════════════════════
+const TY=.55; // tank center height above frame
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  TANKS
-// ═══════════════════════════════════════════════════════════════════════════
-const airTankG = new THREE.Group();
-airTankG.position.set(-3.0, -0.55, -1.7);
-scene.add(airTankG);
-addMesh(cyl(0.38, 0.38, 1.1, 24), alumM, { parent: airTankG });
-addMesh(new THREE.SphereGeometry(0.38, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), alumM, { y: 0.55, rx: Math.PI, parent: airTankG });
-addMesh(new THREE.SphereGeometry(0.38, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), alumM, { y: -0.55, parent: airTankG });
-addMesh(cyl(0.07, 0.07, 0.22, 10), steelBrt, { y: 0.93, parent: airTankG });
-addMesh(cyl(0.385, 0.385, 0.06, 24), steelM, { y: 0.28, parent: airTankG });
-addMesh(cyl(0.385, 0.385, 0.06, 24), steelM, { y: -0.28, parent: airTankG });
+// AIR TANK (blue, large, left-most)
+const airTG=new THREE.Group(); airTG.position.set(-7,.0,-.8); scene.add(airTG);
+add(CY(.38,.38,1.1,28),M.airTk,0,TY,0,0,0,0,airTG);
+add(SP(.38,22,14),M.airTk,0,TY+.55,0,0,0,0,airTG);
+add(SP(.38,22,14),M.airTk,0,TY-.55,0,0,0,0,airTG);
+for(const y of [TY+.28,TY-.28]) add(CY(.385,.385,.065,28),M.sBt,0,y,0,0,0,0,airTG);
+add(CY(.07,.07,.28,10),M.sBt,0,TY+1.03,0,0,0,0,airTG);
+add(CY(.065,.065,.07,10),M.br,0,TY+1.18,0,0,0,0,airTG);
+// AIR label bump
+add(BX(.24,.08,.015),M.pan,0,TY+.14,.39,airTG);
 
-const h2TankG = new THREE.Group();
-h2TankG.position.set(0.8, -0.55, -1.7);
-scene.add(h2TankG);
-addMesh(cyl(0.28, 0.28, 1.0, 24), steelM, { parent: h2TankG });
-addMesh(new THREE.SphereGeometry(0.28, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), steelM, { y: 0.5, rx: Math.PI, parent: h2TankG });
-addMesh(new THREE.SphereGeometry(0.28, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), steelM, { y: -0.5, parent: h2TankG });
-const h2Band = new THREE.MeshStandardMaterial({ color: 0xff2222, emissive: new THREE.Color(0x550000), emissiveIntensity: 0.4 });
-addMesh(cyl(0.285, 0.285, 0.18, 24), h2Band, { parent: h2TankG });
-addMesh(cyl(0.07, 0.07, 0.2, 10), steelBrt, { y: 0.78, parent: h2TankG });
+// H2 TANK (red, tall cylinder)
+const h2TG=new THREE.Group(); h2TG.position.set(-5.8,.0,-.8); scene.add(h2TG);
+add(CY(.3,.3,1.0,26),M.h2Tk,0,TY,0,0,0,0,h2TG);
+add(SP(.3,18,12),M.h2Tk,0,TY+.5,0,0,0,0,h2TG);
+add(SP(.3,18,12),M.h2Tk,0,TY-.5,0,0,0,0,h2TG);
+// White H2 band
+add(CY(.305,.305,.14,26),new THREE.MeshStandardMaterial({color:0xdddddd,metalness:.3,roughness:.6}),0,TY+.1,0,0,0,0,h2TG);
+for(const y of [TY+.26,TY-.26]) add(CY(.305,.305,.065,26),M.sDk,0,y,0,0,0,0,h2TG);
+add(CY(.07,.07,.24,10),M.sBt,0,TY+.88,0,0,0,0,h2TG);
+add(CY(.065,.065,.07,10),M.br,0,TY+1.01,0,0,0,0,h2TG);
 
-const keroTankG = new THREE.Group();
-keroTankG.position.set(3.2, -0.5, -1.6);
-scene.add(keroTankG);
-addMesh(cyl(0.32, 0.32, 0.85, 24), steelDark, { parent: keroTankG });
-addMesh(sph(0.32, 18, 12), steelDark, { y: 0.42, parent: keroTankG });
-addMesh(sph(0.32, 18, 12), steelDark, { y: -0.42, parent: keroTankG });
-const kBand = new THREE.MeshStandardMaterial({ color: 0xccaa00, emissive: new THREE.Color(0x443300), emissiveIntensity: 0.3 });
-addMesh(cyl(0.325, 0.325, 0.15, 24), kBand, { y: 0.1, parent: keroTankG });
-addMesh(cyl(0.07, 0.07, 0.18, 10), steelBrt, { y: 0.75, parent: keroTankG });
+// KEROSENE TANK (yellow)
+const kTG=new THREE.Group(); kTG.position.set(-4.6,.0,-.8); scene.add(kTG);
+add(CY(.32,.32,.88,26),M.kTk,0,TY,0,0,0,0,kTG);
+add(SP(.32,18,12),M.kTk,0,TY+.44,0,0,0,0,kTG);
+add(SP(.32,18,12),M.kTk,0,TY-.44,0,0,0,0,kTG);
+for(const y of [TY+.22,TY-.22]) add(CY(.325,.325,.055,26),M.sBt,0,y,0,0,0,0,kTG);
+add(CY(.07,.07,.22,10),M.sBt,0,TY+.78,0,0,0,0,kTG);
+add(CY(.065,.065,.07,10),M.br,0,TY+.92,0,0,0,0,kTG);
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  PIPELINES & VALVES
-// ═══════════════════════════════════════════════════════════════════════════
-addValve(-3.0, -0.05, -1.7, 'regulator');
-addMesh(cyl(0.055, 0.055, 0.9, 10), alumM, { x: -3.0, y: 0.35, z: -1.7, rx: 0 });
-addValve(-3.0, 0.55, -1.7, 'manual');
-addMesh(cyl(0.055, 0.055, 1.7, 10), alumM, { x: -3.0, y: 0.85, z: -1.1, rx: Math.PI / 2, ry: Math.PI / 2 });
-addMesh(cyl(0.055, 0.055, 0.8, 10), alumM, { x: -3.45, y: 0.85, z: -0.2, ry: 0, rx: Math.PI / 2 });
+// ═══════════════════════════════════════════════════════════════
+// FILTER / REGULATOR STATION  (between tanks and pumps)
+// Sits on frame to left, between tanks and chamber
+// ═══════════════════════════════════════════════════════════════
+// Air filter+regulator
+add(CY(.08,.08,.2,14),M.al,-3.6,TY+.7,-1.0);
+add(SP(.08,12,10),M.al,-3.6,TY+.85,-1.0);
+add(CY(.045,.045,.35,10),M.sBt,-3.6,TY+1.08,-1.0);
+// Pressure gauge
+add(CY(.065,.065,.035,16),M.pan,-3.6,TY+1.32,-1.0);
+add(CY(.062,.062,.018,16),M.blk,-3.6,TY+1.34,-1.0);
 
-addValve(0.8, -0.05, -1.7, 'regulator');
-addMesh(cyl(0.03, 0.03, 0.85, 8), redM, { x: 0.8, y: 0.38, z: -1.7, rx: 0 });
-addValve(0.8, 0.65, -1.7, 'check', 0);
-addMesh(cyl(0.03, 0.03, 0.2, 8), redM, { x: 0.8, y: 0.78, z: -1.7 });
-addValve(0.8, 0.85, -1.7, 'solenoid', 0);
-addMesh(cyl(0.028, 0.028, 0.7, 8), redM, { x: 0.8, y: 0.85, z: -1.35, rx: Math.PI / 2 });
-addMesh(cyl(0.09, 0.09, 0.2, 14), steelBrt, { x: 0.8, y: 0.85, z: -0.94, rx: Math.PI / 2 });
-addMesh(bx(0.14, 0.1, 0.04), blueM.clone(), { x: 0.8, y: 0.98, z: -0.94 });
+// H2 regulator (silver dome + gauge)
+add(SP(.09,14,10),M.al,-3.0,TY+.7,-1.0);
+add(CY(.05,.05,.38,10),M.sBt,-3.0,TY+.95,-1.0);
+add(CY(.065,.065,.035,16),M.pan,-3.0,TY+1.22,-1.0);
+add(CY(.062,.062,.018,16),M.blk,-3.0,TY+1.24,-1.0);
+add(CY(.04,.04,.1,8),M.sDk,-3.0,TY+1.3,-1.0);
 
-const h2HosePts = [
-  new THREE.Vector3(0.8, 0.85, -0.82),
-  new THREE.Vector3(1.2, 0.85, -0.7),
-  new THREE.Vector3(1.6, 0.85, -0.55),
-  new THREE.Vector3(2.0, 0.85, -0.45),
-  new THREE.Vector3(2.2, 0.85, -0.42),
+// Kero filter
+add(CY(.08,.07,.22,12),M.al,-2.4,TY+.7,-1.0);
+add(CY(.075,.08,.04,12),M.sBt,-2.4,TY+.83,-1.0);
+add(CY(.075,.08,.04,12),M.sBt,-2.4,TY+.61,-1.0);
+
+// ═══════════════════════════════════════════════════════════════
+// PUMPS (kerosene pump + H2 MFC)  — x≈-2 to -1.5
+// ═══════════════════════════════════════════════════════════════
+// Kerosene gear pump (yellow-black)
+add(BX(.28,.22,.26),new THREE.MeshStandardMaterial({color:0xcc8800,metalness:.65,roughness:.4}),-2.0,TY+.7,-1.0);
+add(CY(.07,.07,.22,12),M.sBt,-2.0,TY+.9,-1.0);
+add(CY(.12,.12,.22,12),M.blk,-2.0,TY+.7,-.82,Math.PI/2,0,0);
+// H2 MFC box
+add(BX(.18,.13,.08),M.sBt,-1.5,TY+.7,-1.0);
+add(BX(.16,.06,.01),new THREE.MeshStandardMaterial({color:0x001133,emissive:new THREE.Color(0x002266),emissiveIntensity:.6}),-1.5,TY+.76,-.95);
+
+// ═══════════════════════════════════════════════════════════════
+// MIXING MANIFOLD  — where all 3 fuels meet before chamber
+// ═══════════════════════════════════════════════════════════════
+add(BX(.32,.24,.28),M.sBt,-.8,TY+1.35,-.9);
+add(CY(.04,.04,.24,8),M.sM,-.8,TY+1.35,-.75,Math.PI/2,0,0);
+add(CY(.04,.04,.24,8),M.sM,-.72,TY+1.35,-.9,0,0,0);
+add(CY(.04,.04,.24,8),M.sM,-.88,TY+1.35,-.9,0,0,0);
+for(const z of [-.78,-.85,-.92]) add(CY(.025,.025,.22,8),M.sBt,-.8,TY+1.52,z,0,0,0);
+
+// Solenoid valves on fuel lines
+const svMat=new THREE.MeshStandardMaterial({color:0x111820,metalness:.6,roughness:.5});
+const svBlueMat=new THREE.MeshStandardMaterial({color:0x113399,metalness:.7,roughness:.3});
+// H2 solenoid
+add(BX(.13,.13,.16),svMat,-1.8,TY+.7,-1.0);
+add(CY(.042,.042,.09,8),M.sBt,-1.8,TY+.84,-1.0);
+add(BX(.1,.04,.06),svBlueMat,-1.8,TY+.9,-1.0);
+// Kero solenoid
+add(BX(.13,.13,.16),svMat,-1.3,TY+.7,-1.0);
+add(CY(.042,.042,.09,8),M.sBt,-1.3,TY+.84,-1.0);
+add(BX(.1,.04,.06),svBlueMat,-1.3,TY+.9,-1.0);
+
+// Check valves
+add(CY(.065,.065,.16,12),M.sM,-4.8,TY+.7,-1.0,Math.PI/2,0,0);
+add(TR(.065,.014,8,16),M.sBt,-4.8,TY+.7,-.92,Math.PI/2,0,0);
+add(CY(.065,.065,.16,12),M.sM,-3.4,TY+.7,-1.0,Math.PI/2,0,0);
+add(TR(.065,.014,8,16),M.sBt,-3.4,TY+.7,-.92,Math.PI/2,0,0);
+
+// ═══════════════════════════════════════════════════════════════
+// PIPELINES  — from tanks, up, along the frame to manifold and chamber
+// ═══════════════════════════════════════════════════════════════
+
+// AIR pipeline: airTank top → up → horizontal → blower
+tube([new THREE.Vector3(-7,TY+1.22,-.8),new THREE.Vector3(-7,TY+1.65,-.8),new THREE.Vector3(-7,TY+1.65,.4),new THREE.Vector3(-5.5,TY+1.65,.4)],M.airP,.036);
+tube([new THREE.Vector3(-5.5,TY+1.65,.4),new THREE.Vector3(-5.5,TY+1.65,0),new THREE.Vector3(BLOX+2.5,BLOY+1.42,0)],M.airP,.036,40);
+
+// H2 pipeline: h2Tank → regulator → MFC → solenoid → manifold
+tube([new THREE.Vector3(-5.8,TY+1.06,-.8),new THREE.Vector3(-5.8,TY+1.5,-.8),new THREE.Vector3(-5.8,TY+1.5,-1.0),new THREE.Vector3(-1.8,TY+1.5,-1.0),new THREE.Vector3(-1.8,TY+.84,-1.0)],M.h2P,.026,80);
+tube([new THREE.Vector3(-1.8,TY+.7,-1.0),new THREE.Vector3(-1.8,TY+.5,-1.0),new THREE.Vector3(-.8,TY+1.35,-.78)],M.h2P,.026,60);
+// H2 → chamber port
+tube([new THREE.Vector3(-.8,TY+1.52,-.85),new THREE.Vector3(-.8,TY+1.52,-.4+CHX),new THREE.Vector3(CHX,CHY+.5,-.4)],M.h2P,.022,60);
+
+// KERO pipeline: keroTank → filter → pump → solenoid → manifold
+tube([new THREE.Vector3(-4.6,TY+.96,-.8),new THREE.Vector3(-4.6,TY+1.45,-.8),new THREE.Vector3(-4.6,TY+1.45,-1.0),new THREE.Vector3(-2.0,TY+1.45,-1.0),new THREE.Vector3(-2.0,TY+.84,-1.0)],M.kP,.026,80);
+tube([new THREE.Vector3(-1.3,TY+.7,-1.0),new THREE.Vector3(-1.3,TY+.5,-1.0),new THREE.Vector3(-.8,TY+1.35,-.92)],M.kP,.026,60);
+// Kero → chamber port
+tube([new THREE.Vector3(-.8,TY+1.52,-.92),new THREE.Vector3(-.8,TY+1.65,-.22+CHX),new THREE.Vector3(CHX,CHY+.5,.22)],M.kP,.022,60);
+
+// Air → chamber primary port
+tube([new THREE.Vector3(-.8,TY+1.52,-.78),new THREE.Vector3(-.8,TY+1.7,-1.05+CHX),new THREE.Vector3(CHX,CHY+.5,-1.05)],M.airP,.028,60);
+
+// ═══════════════════════════════════════════════════════════════
+// CONTROL PANEL & DAQ  — RIGHT end of rig x≈+5..+8
+// ═══════════════════════════════════════════════════════════════
+const CPX=5.8, CPY=1.4;
+
+// Large control panel box (vertical, at right end of frame)
+const cpG=new THREE.Group(); cpG.position.set(CPX,CPY,.3); scene.add(cpG);
+add(BX(1.1,1.4,.35),M.pan,0,0,0,0,0,0,cpG);
+add(BX(1.12,1.42,.02),M.sDk,0,0,.185,0,0,0,cpG);
+// Panel screen / display
+add(BX(.55,.28,.015),new THREE.MeshStandardMaterial({color:0x000d1a,emissive:new THREE.Color(0x002244),emissiveIntensity:.8}),0,.32,.195,0,0,0,cpG);
+// Waveform lines on display
+for(let i=0;i<4;i++){const lc=[0x00ff88,0x00aaff,0xffaa00,0xff4444][i];add(BX(.46,.005,.004),new THREE.MeshStandardMaterial({color:lc,emissive:new THREE.Color(lc),emissiveIntensity:1}),0,.24+i*.06,.2,0,0,0,cpG);}
+// E-STOP mushroom
+add(CY(.072,.072,.05,24),new THREE.MeshStandardMaterial({color:0xff0000,emissive:new THREE.Color(0x880000),emissiveIntensity:.8,roughness:.3}),0.36,-.38,.2,0,0,0,cpG);
+add(CY(.088,.088,.022,24),M.sDk,.36,-.38,.188,0,0,0,cpG);
+// START button
+add(CY(.055,.055,.04,24),new THREE.MeshStandardMaterial({color:0x00cc44,emissive:new THREE.Color(0x006622),emissiveIntensity:.7,roughness:.3}),.14,-.38,.2,0,0,0,cpG);
+// Indicator lights
+const indC=[0x00ff44,0x00aaff,0xffaa00,0xff2244,0x00ff88,0x44aaff];
+indC.forEach((c,i)=>add(CY(.025,.025,.02,12),new THREE.MeshStandardMaterial({color:c,emissive:new THREE.Color(c),emissiveIntensity:.4}),-.4+i*.16,-.48,.198,0,0,0,cpG));
+// Toggle switches
+const swMeshes=[];
+for(let i=0;i<6;i++){
+  const sm=new THREE.MeshStandardMaterial({color:0x334455,metalness:.6,roughness:.4});
+  const sw=new THREE.Mesh(BX(.1,.06,.04),sm); sw.position.set(-.42+i*.17,.08,.198); cpG.add(sw);
+  const kn=new THREE.Mesh(CY(.028,.028,.055,8),M.sBt); kn.position.set(-.42+i*.17,.15,.198); cpG.add(kn);
+  swMeshes.push(sw);
+}
+// Analog gauges
+for(let i=0;i<4;i++){
+  add(CY(.075,.075,.028,28),M.sBt,-.3+i*.2,-.14,.198,0,0,0,cpG);
+  add(CY(.067,.067,.022,28),M.blk,-.3+i*.2,-.14,.21,0,0,0,cpG);
+}
+// Terminal strip bottom
+add(BX(1.0,.06,.012),new THREE.MeshStandardMaterial({color:0x334455,metalness:.35,roughness:.7}),0,-.61,.198,0,0,0,cpG);
+// Back/sides of panel
+add(BX(1.1,1.4,.02),M.sDk,0,0,-.185,0,0,0,cpG);
+
+// DAQ unit (NI-style black box) — right of control panel
+const daqG=new THREE.Group(); daqG.position.set(CPX+1.1,CPY-.1,.2); scene.add(daqG);
+add(BX(.88,.65,.38),M.pan,0,0,0,0,0,0,daqG);
+add(BX(.9,.67,.02),M.sDk,0,0,.2,0,0,0,daqG);
+// DAQ display
+add(BX(.55,.22,.01),new THREE.MeshStandardMaterial({color:0x001a33,emissive:new THREE.Color(0x003a6a),emissiveIntensity:.7}),0,.1,.21,0,0,0,daqG);
+for(let i=0;i<3;i++){const lc=[0x00ff88,0x00aaff,0xffaa00][i];add(BX(.48,.004,.004),new THREE.MeshStandardMaterial({color:lc,emissive:new THREE.Color(lc),emissiveIntensity:1}),0,.07+i*.06,.215,0,0,0,daqG);}
+// DAQ LEDs
+const daqLeds=[];
+for(let i=0;i<10;i++){const dm=mkLed(0x00aaff,.5);const d=new THREE.Mesh(BX(.05,.05,.01),dm);d.position.set(-.36+i*.082,-.1,.21);daqG.add(d);daqLeds.push(dm);}
+for(let i=0;i<5;i++){const dm=mkLed(0x00ff88,.4);const d=new THREE.Mesh(BX(.04,.04,.01),dm);d.position.set(-.16+i*.085,-.2,.21);daqG.add(d);daqLeds.push(dm);}
+// BNC connectors
+for(let i=0;i<10;i++) add(CY(.013,.013,.04,8),M.sBt,-.36+i*.082,.18,-.21,Math.PI/2,0,0,daqG);
+const daqGM=new THREE.MeshStandardMaterial({color:0x001833,emissive:new THREE.Color(0x002a5a),emissiveIntensity:0,transparent:true,opacity:.5});
+add(BX(.8,.6,.01),daqGM,0,0,.205,0,0,0,daqG);
+
+// Power supply box
+const psG=new THREE.Group(); psG.position.set(CPX+1.1,CPY-.75,.2); scene.add(psG);
+add(BX(.88,.38,.32),M.pan,0,0,0,0,0,0,psG);
+add(BX(.9,.4,.02),M.sDk,0,0,.17,0,0,0,psG);
+add(BX(.55,.08,.01),new THREE.MeshStandardMaterial({color:0x00aaff,emissive:new THREE.Color(0x004488),emissiveIntensity:.7}),0,-.04,.18,0,0,0,psG);
+for(let i=0;i<4;i++) add(CY(.03,.03,.042,10),M.sBt,-.12+i*.09,.1,.18,0,0,0,psG);
+add(CY(.08,.08,.022,18),M.sDk,0,0,.18,Math.PI/2,0,0,psG);
+const psLed=mkLed(0x00ff88,.6); add(SP(.016,8,8),psLed,-.3,.12,.185,0,0,0,psG);
+
+// ═══════════════════════════════════════════════════════════════
+// ALARM STACK — right side of control panel
+// ═══════════════════════════════════════════════════════════════
+const alG=new THREE.Group(); alG.position.set(CPX+.7,CPY+.95,-.1); scene.add(alG);
+add(CY(.052,.052,.45,12),M.sDk,0,.22,0,0,0,0,alG);
+add(CY(.08,.08,.025,16),M.sM,0,0,0,0,0,0,alG);
+const alGM=mkLed(0x00ff88,1.0), alYM=mkLed(0xffcc00,0), alRM=mkLed(0xff2244,0);
+add(CY(.068,.068,.1,16),alGM,0,.1,0,0,0,0,alG);
+add(CY(.068,.068,.1,16),alYM,0,.22,0,0,0,0,alG);
+add(CY(.068,.068,.1,16),alRM,0,.34,0,0,0,0,alG);
+add(CY(.048,.058,.065,16),M.sBt,0,.47,0,0,0,0,alG);
+
+// ═══════════════════════════════════════════════════════════════
+// SIGNAL WIRES — colored cables from chamber → DAQ
+// ═══════════════════════════════════════════════════════════════
+const wireMats=[];
+const wireRoutes=[
+  {pts:[new THREE.Vector3(CHX,.5+CHY,-1.1),new THREE.Vector3(2,2.4,-1.6),new THREE.Vector3(CPX,2.0,-.2),new THREE.Vector3(CPX,CPY+.3,.2)],col:0x2266aa},
+  {pts:[new THREE.Vector3(CHX,.5+CHY,-.55),new THREE.Vector3(2,2.3,-1.5),new THREE.Vector3(CPX+.5,2.0,-.2),new THREE.Vector3(CPX+1.1,CPY+.2,.2)],col:0x22aa55},
+  {pts:[new THREE.Vector3(CHX,.5+CHY,.0),  new THREE.Vector3(2,2.2,-1.4),new THREE.Vector3(CPX+.8,2.0,-.1),new THREE.Vector3(CPX+1.1,CPY+.1,.2)],col:0xcc8800},
+  {pts:[new THREE.Vector3(CHX,-.5+CHY,-.72),new THREE.Vector3(1.5,.4,-1.5),new THREE.Vector3(CPX+.5,.5,-.5),new THREE.Vector3(CPX+1.1,CPY-.2,.2)],col:0xcc4422},
+  {pts:[new THREE.Vector3(-5.8,TY+1.5,-.8),new THREE.Vector3(-5.8,TY+1.8,0),new THREE.Vector3(CPX+.5,2.4,0),new THREE.Vector3(CPX+1.1,CPY+.0,.2)],col:0xaa2222},
 ];
-const h2HoseGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(h2HosePts), 50, 0.024, 8);
-addMesh(h2HoseGeo, rubberM);
-
-addValve(3.2, -0.0, -1.6, 'regulator');
-addMesh(cyl(0.032, 0.032, 0.9, 8), yellowM, { x: 3.2, y: 0.45, z: -1.6, rx: 0 });
-addMesh(bx(0.22, 0.16, 0.25), blackM, { x: 3.2, y: 0.85, z: -1.5 });
-addMesh(cyl(0.06, 0.06, 0.12, 10), steelDark, { x: 3.2, y: 0.85, z: -1.35, rx: Math.PI / 2 });
-addValve(3.2, 0.85, -1.2, 'check');
-addValve(3.2, 0.85, -0.98, 'solenoid');
-addMesh(cyl(0.09, 0.09, 0.18, 14), steelBrt, { x: 3.2, y: 0.85, z: -0.77, rx: Math.PI / 2 });
-addMesh(bx(0.14, 0.1, 0.04), yellowM.clone(), { x: 3.2, y: 0.98, z: -0.77 });
-
-const kHosePts = [
-  new THREE.Vector3(3.2, 0.85, -0.65),
-  new THREE.Vector3(3.0, 0.85, -0.55),
-  new THREE.Vector3(2.7, 0.85, -0.48),
-  new THREE.Vector3(2.4, 0.85, -0.44),
-  new THREE.Vector3(2.2, 0.85, -0.42),
-];
-addMesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(kHosePts), 50, 0.024, 8), rubberM);
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  DAQ BOX
-// ═══════════════════════════════════════════════════════════════════════════
-const daqG = new THREE.Group();
-daqG.position.set(-3.4, 0.82, -1.55);
-scene.add(daqG);
-addMesh(bx(0.85, 0.58, 0.34), panelM, { parent: daqG });
-addMesh(bx(0.87, 0.60, 0.02), steelDark, { z: 0.18, parent: daqG });
-const daqLEDs = [];
-for (let i = 0; i < 8; i++) {
-  const dl = new THREE.Mesh(bx(0.055, 0.055, 0.01), makeLED(0x00aaff, 0.5));
-  dl.position.set(-0.3 + i * 0.085, 0.15, 0.19);
-  daqG.add(dl);
-  daqLEDs.push(dl);
-}
-for (let i = 0; i < 4; i++) {
-  const dl = new THREE.Mesh(bx(0.04, 0.04, 0.01), makeLED(0x00ff88, 0.4));
-  dl.position.set(-0.16 + i * 0.1, 0.04, 0.19);
-  daqG.add(dl);
-  daqLEDs.push(dl);
-}
-addMesh(bx(0.35, 0.08, 0.01), steelBrt, { y: -0.18, z: 0.19, parent: daqG });
-addMesh(bx(0.28, 0.05, 0.01), steelDark, { y: -0.12, z: 0.19, parent: daqG });
-const daqGlowMat = new THREE.MeshStandardMaterial({ color: 0x001133, emissive: new THREE.Color(0x002266), emissiveIntensity: 0, transparent: true, opacity: 0.5 });
-const daqGlowMesh = addMesh(bx(0.73, 0.48, 0.01), daqGlowMat, { z: 0.185, parent: daqG });
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  MAIN CONTROL PANEL
-// ═══════════════════════════════════════════════════════════════════════════
-const panelG = new THREE.Group();
-panelG.position.set(-1.2, 1.55, -1.8);
-panelG.rotation.x = -0.28;
-scene.add(panelG);
-addMesh(bx(1.5, 1.0, 0.1), panelM, { parent: panelG });
-addMesh(bx(1.52, 1.02, 0.02), steelDark, { z: 0.06, parent: panelG });
-addMesh(bx(1.5, 0.04, 0.04), steelBrt, { y:  0.5, z: 0.05, parent: panelG });
-addMesh(bx(1.5, 0.04, 0.04), steelBrt, { y: -0.5, z: 0.05, parent: panelG });
-
-const switchMeshes = [];
-for (let i = 0; i < 6; i++) {
-  const swM = new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.6, roughness: 0.4 });
-  const sw = new THREE.Mesh(bx(0.1, 0.06, 0.035), swM);
-  sw.position.set(-0.52 + i * 0.21, 0.28, 0.08);
-  panelG.add(sw);
-  const knob = new THREE.Mesh(cyl(0.028, 0.028, 0.05, 8), steelBrt);
-  knob.position.set(-0.52 + i * 0.21, 0.35, 0.08);
-  panelG.add(knob);
-  switchMeshes.push(sw);
-}
-for (let i = 0; i < 4; i++) {
-  addMesh(cyl(0.075, 0.075, 0.03, 28), steelBrt, { x: -0.33 + i * 0.22, y: 0.08, z: 0.08, parent: panelG });
-  addMesh(cyl(0.065, 0.065, 0.025, 28), blackM, { x: -0.33 + i * 0.22, y: 0.08, z: 0.095, parent: panelG });
-}
-addMesh(bx(0.6, 0.18, 0.01), new THREE.MeshStandardMaterial({ color: 0x001a33, emissive: new THREE.Color(0x003366), emissiveIntensity: 0.5 }), { y: -0.2, z: 0.08, parent: panelG });
-addMesh(cyl(0.075, 0.075, 0.04, 24), new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: new THREE.Color(0x880000), emissiveIntensity: 0.6, roughness: 0.3 }), { x: 0.6, y: -0.3, z: 0.09, parent: panelG });
-addMesh(cyl(0.09, 0.09, 0.02, 24), steelDark, { x: 0.6, y: -0.3, z: 0.075, parent: panelG });
-addMesh(bx(1.38, 0.06, 0.01), new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.3, roughness: 0.7 }), { y: -0.44, z: 0.075, parent: panelG });
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  ALARM STACK
-// ═══════════════════════════════════════════════════════════════════════════
-const alarmG = new THREE.Group();
-alarmG.position.set(-0.2, 1.75, -1.75);
-scene.add(alarmG);
-addMesh(cyl(0.05, 0.05, 0.38, 12), steelDark, { y: 0.19, parent: alarmG });
-addMesh(cyl(0.08, 0.08, 0.02, 16), steelM, { parent: alarmG });
-const al_green  = new THREE.Mesh(cyl(0.065, 0.065, 0.1, 16), makeLED(0x00ff88, 1.0));
-const al_yellow = new THREE.Mesh(cyl(0.065, 0.065, 0.1, 16), makeLED(0xffcc00, 0.0));
-const al_red    = new THREE.Mesh(cyl(0.065, 0.065, 0.1, 16), makeLED(0xff2244, 0.0));
-al_green.position.y  = 0.1;
-al_yellow.position.y = 0.22;
-al_red.position.y    = 0.34;
-alarmG.add(al_green, al_yellow, al_red);
-addMesh(cyl(0.045, 0.055, 0.06, 16), steelBrt, { y: 0.45, parent: alarmG });
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  POWER SUPPLY BOX
-// ═══════════════════════════════════════════════════════════════════════════
-const psG = new THREE.Group();
-psG.position.set(-4.0, 0.82, -1.5);
-scene.add(psG);
-addMesh(bx(0.6, 0.5, 0.32), panelM, { parent: psG });
-addMesh(bx(0.62, 0.52, 0.02), steelDark, { z: 0.17, parent: psG });
-addMesh(bx(0.44, 0.07, 0.01), new THREE.MeshStandardMaterial({ color: 0x00aaff, emissive: new THREE.Color(0x004488), emissiveIntensity: 0.6 }), { y: -0.1, z: 0.175, parent: psG });
-for (let i = 0; i < 4; i++) {
-  addMesh(cyl(0.03, 0.03, 0.045, 10), steelBrt, { x: -0.14 + i * 0.1, y: 0.12, z: 0.175, parent: psG });
-}
-addMesh(bx(0.38, 0.055, 0.01), steelDark, { y: -0.19, z: 0.175, parent: psG });
-addMesh(bx(0.25, 0.12, 0.01), blackM, { y: 0.16, z: 0.175, parent: psG });
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  SIGNAL WIRES
-// ═══════════════════════════════════════════════════════════════════════════
-const wireRoutes = [
-  { pts: [new THREE.Vector3(2.2, 1.28, 0), new THREE.Vector3(1.0, 1.7, -0.8), new THREE.Vector3(-1.5, 1.7, -1.2), new THREE.Vector3(-3.4, 1.1, -1.55)], color: 0x2255aa },
-  { pts: [new THREE.Vector3(2.2, 1.26, 0), new THREE.Vector3(0.5, 1.65, -0.9), new THREE.Vector3(-2.0, 1.65, -1.25), new THREE.Vector3(-3.4, 1.05, -1.55)], color: 0x225588 },
-  { pts: [new THREE.Vector3(2.2, 0.45, 0), new THREE.Vector3(1.5, 0.2, -0.8), new THREE.Vector3(-2.0, 0.2, -1.3), new THREE.Vector3(-3.4, 0.6, -1.55)], color: 0x226644 },
-  { pts: [new THREE.Vector3(0.8, 0.92, -1.7), new THREE.Vector3(0.0, 1.2, -1.7), new THREE.Vector3(-2.5, 1.2, -1.7), new THREE.Vector3(-3.4, 0.9, -1.55)], color: 0x882222 },
-];
-const wireMeshes = [];
-wireRoutes.forEach(({ pts, color }) => {
-  const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.008, 6);
-  const mat = new THREE.MeshStandardMaterial({ color, emissive: new THREE.Color(color), emissiveIntensity: 0 });
-  const wm = new THREE.Mesh(geo, mat);
-  scene.add(wm);
-  wireMeshes.push(wm);
+wireRoutes.forEach(({pts,col})=>{
+  const g=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),80,.008,6);
+  const mat=new THREE.MeshStandardMaterial({color:col,emissive:new THREE.Color(col),emissiveIntensity:0});
+  const wm=new THREE.Mesh(g,mat); scene.add(wm); wireMats.push(mat);
 });
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  PARTICLE SYSTEMS
-// ═══════════════════════════════════════════════════════════════════════════
-function makeParticles(n, color, size = 0.04) {
-  const geo = new THREE.BufferGeometry();
-  const pos = new Float32Array(n * 3);
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const mat = new THREE.PointsMaterial({ color, size, transparent: true, opacity: 0.88, sizeAttenuation: true, depthWrite: false });
-  const pts = new THREE.Points(geo, mat);
-  pts.visible = false;
-  scene.add(pts);
-  return { pts, geo, pos };
+// ═══════════════════════════════════════════════════════════════
+// PARTICLE SYSTEMS
+// ═══════════════════════════════════════════════════════════════
+function mkPS(n,col,sz=.04){
+  const geo=new THREE.BufferGeometry();
+  const pos=new Float32Array(n*3);
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat=new THREE.PointsMaterial({color:col,size:sz,transparent:true,opacity:.86,sizeAttenuation:true,depthWrite:false});
+  const ps=new THREE.Points(geo,mat); ps.visible=false; scene.add(ps);
+  return {ps,geo,pos,mat};
 }
 
-const airCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-3.7, 0.85, 0), new THREE.Vector3(-2.8, 0.85, 0),
-  new THREE.Vector3(-2.0, 0.85, 0), new THREE.Vector3(-1.3, 0.85, 0),
-  new THREE.Vector3(-0.85, 0.85, 0), new THREE.Vector3(0.1, 0.85, 0),
-  new THREE.Vector3(1.0, 0.85, 0), new THREE.Vector3(2.2, 0.85, 0),
-  new THREE.Vector3(3.5, 0.85, 0), new THREE.Vector3(4.3, 0.85, 0),
+// Air path: blower → PH → chamber → nozzle
+const airCrv=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(BLOX,BLOY,0),new THREE.Vector3(BLOX+2.1,BLOY+1.42,0),
+  new THREE.Vector3(PHOX-1,PHOY,0),new THREE.Vector3(PHOX,PHOY,0),new THREE.Vector3(PHOX+1,PHOY,0),
+  new THREE.Vector3(CHX-1.6,CHY,0),new THREE.Vector3(CHX,CHY,0),new THREE.Vector3(CHX+1.6,CHY,0),
+  new THREE.Vector3(NZX,CHY,0),new THREE.Vector3(NZX+1.1,CHY,0),
 ]);
-const airParts = makeParticles(160, 0x44aaff, 0.042);
-
-const h2Curve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(0.8, -0.05, -1.7), new THREE.Vector3(0.8, 0.85, -1.7),
-  new THREE.Vector3(0.8, 0.85, -1.0), new THREE.Vector3(1.2, 0.85, -0.7),
-  new THREE.Vector3(2.2, 0.85, -0.42),
+const h2Crv=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-5.8,TY+.5,-.8),new THREE.Vector3(-5.8,TY+1.5,-.8),
+  new THREE.Vector3(-1.8,TY+1.5,-1.0),new THREE.Vector3(-1.8,TY+.7,-1.0),
+  new THREE.Vector3(-.8,TY+1.52,-.85),new THREE.Vector3(CHX,CHY+.5,-.4),
 ]);
-const h2Parts = makeParticles(70, 0xff4444, 0.038);
-
-const keroCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(3.2, 0.0, -1.6), new THREE.Vector3(3.2, 0.85, -1.5),
-  new THREE.Vector3(3.2, 0.85, -0.65), new THREE.Vector3(2.7, 0.85, -0.48),
-  new THREE.Vector3(2.2, 0.85, -0.42),
+const keroCrv=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-4.6,TY+.5,-.8),new THREE.Vector3(-4.6,TY+1.45,-.8),
+  new THREE.Vector3(-1.3,TY+1.45,-1.0),new THREE.Vector3(-1.3,TY+.7,-1.0),
+  new THREE.Vector3(-.8,TY+1.52,-.92),new THREE.Vector3(CHX,CHY+.5,.22),
 ]);
-const keroParts = makeParticles(70, 0xffdd00, 0.038);
-
-const exhCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(3.9, 0.85, 0), new THREE.Vector3(4.6, 0.95, 0.1),
-  new THREE.Vector3(5.5, 1.2, 0.3), new THREE.Vector3(6.8, 1.7, 0.7),
-  new THREE.Vector3(8.0, 2.4, 1.2),
+const exhCrv=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(NZX+.95,CHY,0),new THREE.Vector3(NZX+2,CHY+.3,.1),
+  new THREE.Vector3(NZX+4,CHY+.9,.4),new THREE.Vector3(NZX+7,CHY+2,1.0),
 ]);
-const exhParts = makeParticles(100, 0xffaa44, 0.055);
 
-function updateParticles(sys, curve, speed, active) {
-  if (!active) { sys.pts.visible = false; return; }
-  sys.pts.visible = true;
-  const n = sys.pos.length / 3;
-  const et = clock.getElapsedTime();
-  for (let i = 0; i < n; i++) {
-    const t = ((i / n + et * speed) % 1);
-    const p = curve.getPoint(t);
-    sys.pos[i * 3]     = p.x;
-    sys.pos[i * 3 + 1] = p.y;
-    sys.pos[i * 3 + 2] = p.z;
+const airPS=mkPS(220,0x44aaff,.044);
+const h2PS =mkPS(90,0xff5555,.038);
+const kPS  =mkPS(90,0xffcc00,.038);
+const exPS =mkPS(150,0xff9944,.058);
+const smoPS=mkPS(90,0x889999,.085); smoPS.mat.opacity=.32;
+
+function updPS(p,crv,spd,on,t){
+  if(!on){p.ps.visible=false;return;} p.ps.visible=true;
+  const n=p.pos.length/3;
+  for(let i=0;i<n;i++){
+    const tv=((i/n+t*spd)%1);
+    const pt=crv.getPoint(tv);
+    p.pos[i*3]=pt.x+(Math.random()-.5)*.04;
+    p.pos[i*3+1]=pt.y+(Math.random()-.5)*.04;
+    p.pos[i*3+2]=pt.z+(Math.random()-.5)*.04;
   }
-  sys.geo.attributes.position.needsUpdate = true;
+  p.geo.attributes.position.needsUpdate=true;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  SYSTEM STATE
-// ═══════════════════════════════════════════════════════════════════════════
-const SYS = {
-  blower: false, preheater: false, h2Valve: false,
-  keroPump: false, ignition: false, fullRun: false,
-  estop: false, h2Ratio: 20, seqRunning: false
-};
-const SENS = {
-  t1: 22, t2: 22, t3: 22, t4: 22,
-  p1: 1.013, p2: 1.013,
-  af: 0, hf: 0, kf: 0,
-  eff: 0, phi: 0, flame: false, alarm: 'NORMAL'
-};
+// ═══════════════════════════════════════════════════════════════
+// SOUND ENGINE  (Web Audio API)
+// ═══════════════════════════════════════════════════════════════
+let audioCtx=null, soundEnabled=false;
+let blowerOsc=null, blowerGain=null;
+let burnOsc=null, burnGain=null, burnNoise=null, burnNoiseGain=null;
+let igniteSrc=null;
 
-function lerp(a, b, t) { return a + (b - a) * t; }
-function nr(v, d=1) { return v.toFixed(d); }
+function initAudio(){
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  // BLOWER: layered oscillators simulating centrifugal fan
+  blowerGain=audioCtx.createGain(); blowerGain.gain.value=0;
+  blowerGain.connect(audioCtx.destination);
 
-function updateSensors() {
-  const s = SYS;
-  if (s.estop) {
-    SENS.t1 = lerp(SENS.t1, 22, 0.02);
-    SENS.t2 = lerp(SENS.t2, 22, 0.02);
-    SENS.t3 = lerp(SENS.t3, 22, 0.02);
-    SENS.t4 = lerp(SENS.t4, 22, 0.02);
-    SENS.p1 = lerp(SENS.p1, 1.013, 0.02);
-    SENS.p2 = lerp(SENS.p2, 1.013, 0.02);
-    SENS.af = lerp(SENS.af, 0, 0.04);
-    SENS.hf = lerp(SENS.hf, 0, 0.05);
-    SENS.kf = lerp(SENS.kf, 0, 0.05);
-    SENS.eff = lerp(SENS.eff, 0, 0.03);
-    SENS.phi = 0; SENS.flame = false; SENS.alarm = 'E-STOP';
-    return;
-  }
-  if (s.blower) {
-    SENS.t1 = lerp(SENS.t1, 42 + Math.random() * 4, 0.015);
-    SENS.af = lerp(SENS.af, 28 + Math.random() * 2.5, 0.025);
-    SENS.p1 = lerp(SENS.p1, 1.18 + Math.random() * 0.02, 0.015);
-  }
-  if (s.preheater) {
-    SENS.t2 = lerp(SENS.t2, 415 + Math.random() * 18, 0.01);
-  }
-  if (s.h2Valve) {
-    const hTarget = (SENS.af * s.h2Ratio / 100) * 0.13;
-    SENS.hf = lerp(SENS.hf, hTarget + Math.random() * 0.03, 0.025);
-  }
-  if (s.keroPump) {
-    const kTarget = SENS.af * 0.058 * (1 - s.h2Ratio / 100);
-    SENS.kf = lerp(SENS.kf, kTarget + Math.random() * 0.02, 0.025);
-  }
-  if (s.fullRun) {
-    SENS.t3 = lerp(SENS.t3, 1185 + Math.random() * 55, 0.006);
-    SENS.t4 = lerp(SENS.t4, 820 + Math.random() * 35, 0.006);
-    SENS.p2 = lerp(SENS.p2, 1.24 + Math.random() * 0.025, 0.012);
-    SENS.p1 = lerp(SENS.p1, 1.92 + Math.random() * 0.04, 0.012);
-    SENS.eff = lerp(SENS.eff, 92.5 + Math.random() * 3.5, 0.01);
-    SENS.phi = +(1.05 + (s.h2Ratio / 200) + Math.random() * 0.02).toFixed(3);
-    SENS.flame = true; SENS.alarm = 'NORMAL';
+  blowerOsc=audioCtx.createOscillator(); blowerOsc.type='sawtooth';
+  blowerOsc.frequency.value=55;
+  const blF=audioCtx.createBiquadFilter(); blF.type='lowpass'; blF.frequency.value=600;
+  blowerOsc.connect(blF); blF.connect(blowerGain); blowerOsc.start();
+
+  const blO2=audioCtx.createOscillator(); blO2.type='triangle'; blO2.frequency.value=120;
+  const blF2=audioCtx.createBiquadFilter(); blF2.type='bandpass'; blF2.frequency.value=200; blF2.Q.value=2;
+  blO2.connect(blF2); blF2.connect(blowerGain); blO2.start();
+
+  const blO3=audioCtx.createOscillator(); blO3.type='sawtooth'; blO3.frequency.value=87;
+  const blF3=audioCtx.createBiquadFilter(); blF3.type='lowpass'; blF3.frequency.value=400;
+  blO3.connect(blF3); blF3.connect(blowerGain); blO3.start();
+
+  // COMBUSTION: noise band for roar + low oscillator rumble
+  burnGain=audioCtx.createGain(); burnGain.gain.value=0;
+  burnGain.connect(audioCtx.destination);
+
+  const bufSize=audioCtx.sampleRate*2;
+  const nBuf=audioCtx.createBuffer(1,bufSize,audioCtx.sampleRate);
+  const nd=nBuf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) nd[i]=(Math.random()*2-1);
+  burnNoise=audioCtx.createBufferSource(); burnNoise.buffer=nBuf; burnNoise.loop=true;
+  burnNoiseGain=audioCtx.createGain(); burnNoiseGain.gain.value=.28;
+  const bF1=audioCtx.createBiquadFilter(); bF1.type='bandpass'; bF1.frequency.value=350; bF1.Q.value=.8;
+  const bF2=audioCtx.createBiquadFilter(); bF2.type='lowpass'; bF2.frequency.value=900;
+  burnNoise.connect(burnNoiseGain); burnNoiseGain.connect(bF1); bF1.connect(bF2); bF2.connect(burnGain);
+  burnNoise.start();
+
+  burnOsc=audioCtx.createOscillator(); burnOsc.type='sawtooth'; burnOsc.frequency.value=42;
+  const boF=audioCtx.createBiquadFilter(); boF.type='lowpass'; boF.frequency.value=180;
+  const boG=audioCtx.createGain(); boG.gain.value=.15;
+  burnOsc.connect(boF); boF.connect(boG); boG.connect(burnGain); burnOsc.start();
+
+  // High freq hiss for hydrogen
+  const hissOsc=audioCtx.createOscillator(); hissOsc.type='sawtooth'; hissOsc.frequency.value=280;
+  const hissF=audioCtx.createBiquadFilter(); hissF.type='highpass'; hissF.frequency.value=1800;
+  const hissG=audioCtx.createGain(); hissG.gain.value=.12;
+  hissOsc.connect(hissF); hissF.connect(hissG); hissG.connect(burnGain); hissOsc.start();
+}
+
+function setBlowerSound(on){
+  if(!audioCtx||!blowerGain)return;
+  blowerGain.gain.cancelScheduledValues(audioCtx.currentTime);
+  blowerGain.gain.linearRampToValueAtTime(on?.28:0,audioCtx.currentTime+1.5);
+}
+function setBurnSound(on){
+  if(!audioCtx||!burnGain)return;
+  burnGain.gain.cancelScheduledValues(audioCtx.currentTime);
+  burnGain.gain.linearRampToValueAtTime(on?.55:0,audioCtx.currentTime+(on?2:1));
+}
+function playIgniteSound(){
+  if(!audioCtx)return;
+  const g=audioCtx.createGain(); g.gain.value=.7;
+  g.connect(audioCtx.destination);
+  const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(400,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.4);
+  const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=300; f.Q.value=2;
+  o.connect(f); f.connect(g); o.start(); o.stop(audioCtx.currentTime+.5);
+  g.gain.setValueAtTime(.7,audioCtx.currentTime);
+  g.gain.linearRampToValueAtTime(0,audioCtx.currentTime+.5);
+}
+
+window.toggleSound=function(){
+  if(!soundEnabled){
+    initAudio(); soundEnabled=true;
+    document.getElementById('soundBtn').textContent='🔊 Sound ON';
+    document.getElementById('soundBtn').style.color='#00ff88';
+    if(SYS.blower) setBlowerSound(true);
+    if(SYS.run) setBurnSound(true);
   } else {
-    SENS.t3 = lerp(SENS.t3, 22, 0.008);
-    SENS.t4 = lerp(SENS.t4, 22, 0.008);
-    SENS.eff = lerp(SENS.eff, 0, 0.02);
-    SENS.phi = 0; SENS.flame = false;
+    soundEnabled=false;
+    if(blowerGain) blowerGain.gain.value=0;
+    if(burnGain) burnGain.gain.value=0;
+    document.getElementById('soundBtn').textContent='🔊 Enable Sound';
+    document.getElementById('soundBtn').style.color='#4a9eff';
   }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SYSTEM STATE
+// ═══════════════════════════════════════════════════════════════
+const SYS={blower:false,preheater:false,h2v:false,kero:false,ign:false,run:false,estop:false,h2r:20,seq:false};
+const S={t1:22,t2:22,t3:22,t4:22,p1:1.013,p2:1.013,af:0,hf:0,kf:0,eff:0,phi:0,flame:false,alarm:'NORMAL'};
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+function upSens(){
+  const s=SYS;
+  if(s.estop){S.t1=lerp(S.t1,22,.015);S.t2=lerp(S.t2,22,.01);S.t3=lerp(S.t3,22,.007);S.t4=lerp(S.t4,22,.007);S.p1=lerp(S.p1,1.013,.02);S.p2=lerp(S.p2,1.013,.02);S.af=lerp(S.af,0,.04);S.hf=lerp(S.hf,0,.05);S.kf=lerp(S.kf,0,.05);S.eff=lerp(S.eff,0,.025);S.phi=0;S.flame=false;S.alarm='E-STOP';return;}
+  if(s.blower){S.t1=lerp(S.t1,44+Math.random()*4,.012);S.af=lerp(S.af,32+Math.random()*2.5,.022);S.p1=lerp(S.p1,1.24+Math.random()*.025,.012);}
+  if(s.preheater) S.t2=lerp(S.t2,445+Math.random()*22,.009);
+  if(s.h2v){const h=(S.af*s.h2r/100)*.12;S.hf=lerp(S.hf,h+Math.random()*.03,.022);}
+  if(s.kero){const k=S.af*.058*(1-s.h2r/100);S.kf=lerp(S.kf,k+Math.random()*.02,.022);}
+  if(s.run){S.t3=lerp(S.t3,1215+Math.random()*65,.005);S.t4=lerp(S.t4,845+Math.random()*38,.005);S.p2=lerp(S.p2,1.28+Math.random()*.03,.01);S.p1=lerp(S.p1,1.98+Math.random()*.045,.01);S.eff=lerp(S.eff,93.5+Math.random()*3.5,.008);S.phi=+(1.04+(s.h2r/200)+Math.random()*.022).toFixed(3);S.flame=true;S.alarm='NORMAL';}
+  else{S.t3=lerp(S.t3,22,.006);S.t4=lerp(S.t4,22,.006);S.eff=lerp(S.eff,0,.018);S.phi=0;S.flame=false;}
 }
-
-function updateDashboard() {
-  const s = SYS;
-  document.getElementById('v-t1').textContent = s.blower ? `${nr(SENS.t1,1)} °C` : '-- °C';
-  document.getElementById('v-t2').textContent = s.preheater ? `${nr(SENS.t2,0)} °C` : '-- °C';
-  document.getElementById('v-t3').textContent = s.fullRun ? `${nr(SENS.t3,0)} °C` : '-- °C';
-  document.getElementById('v-t4').textContent = s.fullRun ? `${nr(SENS.t4,0)} °C` : '-- °C';
-  document.getElementById('v-p1').textContent = s.blower ? `${nr(SENS.p1,3)} bar` : '-- bar';
-  document.getElementById('v-p2').textContent = s.fullRun ? `${nr(SENS.p2,3)} bar` : '-- bar';
-  document.getElementById('v-af').textContent = s.blower ? `${nr(SENS.af,1)} g/s` : '-- g/s';
-  document.getElementById('v-hf').textContent = s.h2Valve ? `${nr(SENS.hf,3)} g/s` : '-- g/s';
-  document.getElementById('v-kf').textContent = s.keroPump ? `${nr(SENS.kf,3)} g/s` : '-- g/s';
-  const effEl = document.getElementById('v-eff');
-  effEl.textContent = s.fullRun ? `${nr(SENS.eff,1)} %` : '-- %';
-  document.getElementById('v-phi').textContent = s.fullRun ? `${SENS.phi}` : '--';
-  const flEl = document.getElementById('v-flame');
-  flEl.textContent = SENS.flame ? 'ACTIVE' : 'OFF';
-  flEl.className = 'dash-value ' + (SENS.flame ? 'ok' : '');
-  const alEl = document.getElementById('v-alarm');
-  alEl.textContent = SENS.alarm;
-  // FIX: was SENS.estop (undefined) — must use SYS.estop
-  alEl.className = 'dash-value ' + (SYS.estop ? 'alert' : 'ok');
-  const dot = document.getElementById('status-dot');
-  const stx = document.getElementById('status-text');
-  if (s.estop)        { dot.className='status-dot alarm';   stx.textContent='E-STOP'; }
-  else if (s.fullRun) { dot.className='status-dot';          stx.textContent='OPERATIONAL'; }
-  else if (s.ignition){ dot.className='status-dot alarm';   stx.textContent='IGNITING'; }
-  else if (s.blower)  { dot.className='status-dot standby'; stx.textContent='STARTING UP'; }
-  else                { dot.className='status-dot standby'; stx.textContent='STANDBY'; }
+function nr(v,d=1){return v.toFixed(d);}
+function upDash(){
+  const s=SYS;
+  document.getElementById('vt1').textContent=s.blower?nr(S.t1,1)+' °C':'-- °C';
+  document.getElementById('vt2').textContent=s.preheater?nr(S.t2,0)+' °C':'-- °C';
+  document.getElementById('vt3').textContent=s.run?nr(S.t3,0)+' °C':'-- °C';
+  document.getElementById('vt4').textContent=s.run?nr(S.t4,0)+' °C':'-- °C';
+  document.getElementById('vp1').textContent=s.blower?nr(S.p1,3)+' bar':'-- bar';
+  document.getElementById('vp2').textContent=s.run?nr(S.p2,3)+' bar':'-- bar';
+  document.getElementById('vaf').textContent=s.blower?nr(S.af,1)+' g/s':'-- g/s';
+  document.getElementById('vhf').textContent=s.h2v?nr(S.hf,3)+' g/s':'-- g/s';
+  document.getElementById('vkf').textContent=s.kero?nr(S.kf,3)+' g/s':'-- g/s';
+  document.getElementById('veff').textContent=s.run?nr(S.eff,1)+' %':'-- %';
+  document.getElementById('vphi').textContent=s.run?S.phi:'--';
+  const fl=document.getElementById('vflame');fl.textContent=S.flame?'ACTIVE':'OFF';fl.className='dv'+(S.flame?' ok':'');
+  const al=document.getElementById('valarm');al.textContent=S.alarm;al.className='dv'+(s.estop?' al':' ok');
+  const dot=document.getElementById('sdot'),st=document.getElementById('stxt');
+  if(s.estop){dot.className='sd es';st.textContent='E-STOP';}
+  else if(s.run){dot.className='sd run';st.textContent='OPERATIONAL';}
+  else if(s.ign){dot.className='sd ign';st.textContent='IGNITING';}
+  else if(s.blower){dot.className='sd st';st.textContent='STARTING UP';}
+  else{dot.className='sd';st.textContent='STANDBY';}
 }
+function sq(i,s){const e=document.getElementById('sq'+(i+1));if(e)e.className='sq '+(s||'');}
+const slp=ms=>new Promise(r=>setTimeout(r,ms));
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  SEQUENCE CONTROL
-// ═══════════════════════════════════════════════════════════════════════════
-function setStep(i, state) {
-  const el = document.getElementById('sq' + (i + 1));
-  if (el) el.className = 'sq ' + (state || '');
-}
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-window.startNextSystem = async function () {
-  if (SYS.seqRunning || SYS.estop) return;
-  if (!SYS.blower) {
-    SYS.seqRunning = true; setStep(0, 'active');
-    await sleep(1100);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-    SYS.blower = true;
-    document.getElementById('btn-start').classList.add('active');
-    setStep(0, 'done'); SYS.seqRunning = false;
-  } else if (!SYS.preheater) {
-    SYS.seqRunning = true; setStep(1, 'active');
-    await sleep(1400);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-    SYS.preheater = true;
-    setStep(1, 'done'); SYS.seqRunning = false;
-  } else if (!SYS.h2Valve) {
-    SYS.seqRunning = true; setStep(2, 'active');
-    await sleep(900);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-    SYS.h2Valve = true;
-    setStep(2, 'done'); SYS.seqRunning = false;
-  } else if (!SYS.keroPump) {
-    SYS.seqRunning = true; setStep(3, 'active');
-    await sleep(900);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-    SYS.keroPump = true;
-    setStep(3, 'done'); SYS.seqRunning = false;
-  }
+window.startNext=async function(){
+  if(SYS.seq||SYS.estop)return;
+  if(!SYS.blower){SYS.seq=true;sq(0,'act');await slp(1100);if(SYS.estop){SYS.seq=false;return;}SYS.blower=true;if(soundEnabled)setBlowerSound(true);document.getElementById('bstart').classList.add('on');sq(0,'done');SYS.seq=false;}
+  else if(!SYS.preheater){SYS.seq=true;sq(1,'act');await slp(1400);if(SYS.estop){SYS.seq=false;return;}SYS.preheater=true;sq(1,'done');SYS.seq=false;}
+  else if(!SYS.h2v){SYS.seq=true;sq(2,'act');await slp(900);if(SYS.estop){SYS.seq=false;return;}SYS.h2v=true;sq(2,'done');SYS.seq=false;}
+  else if(!SYS.kero){SYS.seq=true;sq(3,'act');await slp(900);if(SYS.estop){SYS.seq=false;return;}SYS.kero=true;sq(3,'done');SYS.seq=false;}
 };
-
-window.autoIgnition = async function () {
-  if (SYS.seqRunning || SYS.estop || !SYS.blower) return;
-  SYS.seqRunning = true;
-  if (!SYS.preheater) {
-    setStep(1,'active'); await sleep(1400);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-    SYS.preheater = true; setStep(1,'done'); await sleep(300);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-  }
-  if (!SYS.h2Valve) {
-    setStep(2,'active'); await sleep(900);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-    SYS.h2Valve = true; setStep(2,'done'); await sleep(200);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-  }
-  if (!SYS.keroPump) {
-    setStep(3,'active'); await sleep(900);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-    SYS.keroPump = true; setStep(3,'done'); await sleep(200);
-    if (SYS.estop) { SYS.seqRunning = false; return; }
-  }
-  setStep(4,'active');
-  SYS.ignition = true;
-  await sleep(2000);
-  if (SYS.estop) { SYS.ignition = false; SYS.seqRunning = false; return; }
-  SYS.ignition = false;
-  SYS.fullRun = true;
-  setStep(4,'done');
-  setStep(5,'active');
-  await sleep(400);
-  setStep(5,'done');
-  document.getElementById('btn-ignite').classList.add('active');
-  SYS.seqRunning = false;
+window.autoIgn=async function(){
+  if(SYS.seq||SYS.estop)return;SYS.seq=true;
+  if(!SYS.blower){sq(0,'act');await slp(1100);if(SYS.estop){SYS.seq=false;return;}SYS.blower=true;if(soundEnabled)setBlowerSound(true);sq(0,'done');await slp(300);}
+  if(!SYS.preheater){sq(1,'act');await slp(1400);if(SYS.estop){SYS.seq=false;return;}SYS.preheater=true;sq(1,'done');await slp(300);}
+  if(!SYS.h2v){sq(2,'act');await slp(900);if(SYS.estop){SYS.seq=false;return;}SYS.h2v=true;sq(2,'done');await slp(200);}
+  if(!SYS.kero){sq(3,'act');await slp(900);if(SYS.estop){SYS.seq=false;return;}SYS.kero=true;sq(3,'done');await slp(200);}
+  sq(4,'act');SYS.ign=true;if(soundEnabled)playIgniteSound();
+  await slp(2200);if(SYS.estop){SYS.ign=false;SYS.seq=false;return;}
+  SYS.ign=false;SYS.run=true;if(soundEnabled)setBurnSound(true);
+  sq(4,'done');sq(5,'act');await slp(400);sq(5,'done');
+  document.getElementById('bign').classList.add('on');SYS.seq=false;
 };
-
-window.emergencyStop = function () {
-  SYS.blower = SYS.preheater = SYS.h2Valve = SYS.keroPump =
-  SYS.ignition = SYS.fullRun = SYS.seqRunning = false;
-  SYS.estop = true;
-  flameMesh.visible = false; sparkMesh.visible = false; flameLight.intensity = 0;
-  for (let i = 0; i < 6; i++) setStep(i, '');
-  document.getElementById('btn-start').classList.remove('active');
-  document.getElementById('btn-ignite').classList.remove('active');
-  SENS.alarm = 'E-STOP';
+window.eStop=function(){
+  SYS.blower=SYS.preheater=SYS.h2v=SYS.kero=SYS.ign=SYS.run=SYS.seq=false;SYS.estop=true;
+  if(soundEnabled){setBlowerSound(false);setBurnSound(false);}
+  spark.visible=false;
+  for(let i=0;i<6;i++)sq(i,'');
+  document.getElementById('bstart').classList.remove('on');
+  document.getElementById('bign').classList.remove('on');
 };
-
-window.resetSystem = function () {
-  SYS.blower = SYS.preheater = SYS.h2Valve = SYS.keroPump =
-  SYS.ignition = SYS.fullRun = SYS.seqRunning = SYS.estop = false;
-  flameMesh.visible = false; sparkMesh.visible = false;
-  flameLight.intensity = 0; preheaterLight.intensity = 0;
-  for (let i = 0; i < 6; i++) setStep(i, '');
-  document.getElementById('btn-start').classList.remove('active');
-  document.getElementById('btn-ignite').classList.remove('active');
-  Object.assign(SENS, { t1:22, t2:22, t3:22, t4:22, p1:1.013, p2:1.013,
-    af:0, hf:0, kf:0, eff:0, phi:0, flame:false, alarm:'NORMAL' });
+window.resetSys=function(){
+  SYS.blower=SYS.preheater=SYS.h2v=SYS.kero=SYS.ign=SYS.run=SYS.seq=SYS.estop=false;
+  if(soundEnabled){setBlowerSound(false);setBurnSound(false);}
+  spark.visible=false;
+  flCoreMat.opacity=0;flMidMat.opacity=0;flOutMat.opacity=0;flTipMat.opacity=0;
+  wisps.forEach(w=>w.mat.opacity=0);
+  fL1.intensity=fL2.intensity=fL3.intensity=phL.intensity=0;
+  pGM.opacity=0;pGM.emissiveIntensity=0;sGM.opacity=0;sGM.emissiveIntensity=0;dGM.opacity=0;dGM.emissiveIntensity=0;
+  coilMats.forEach(c=>{c.emissiveIntensity=0;c.color.setHex(0x553322);c.emissive.setHex(0x000000);});
+  for(let i=0;i<6;i++)sq(i,'');
+  document.getElementById('bstart').classList.remove('on');
+  document.getElementById('bign').classList.remove('on');
+  Object.assign(S,{t1:22,t2:22,t3:22,t4:22,p1:1.013,p2:1.013,af:0,hf:0,kf:0,eff:0,phi:0,flame:false,alarm:'NORMAL'});
 };
+window.setH2=function(v){SYS.h2r=parseInt(v);document.getElementById('h2v').textContent=v+' %';};
 
-window.updateH2 = function (val) {
-  SYS.h2Ratio = parseInt(val);
-  document.getElementById('h2-val').textContent = val + ' %';
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  RENDER LOOP
-// ═══════════════════════════════════════════════════════════════════════════
-const clock = new THREE.Clock();
-
-function animate() {
+// ═══════════════════════════════════════════════════════════════
+// RENDER LOOP
+// ═══════════════════════════════════════════════════════════════
+const clk=new THREE.Clock();
+function animate(){
   requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-  const s = SYS;
+  const t=clk.getElapsedTime(), s=SYS;
 
-  if (s.blower && !s.estop) {
-    fanHub.rotation.z += 0.09 + (s.fullRun ? 0.04 : 0);
-  }
+  // Fan spin
+  if(s.blower&&!s.estop) fanG.rotation.z+=.092+(s.run?.04:0);
 
-  coilMeshes.forEach((cm, idx) => {
-    if (s.preheater && !s.estop) {
-      cm.material.emissiveIntensity = 0.7 + Math.sin(t * 2.5 + idx) * 0.25;
-      cm.material.color.setHex(0xff7722);
-      cm.material.emissive.setHex(0xff4400);
-      preheaterLight.intensity = 0.5 + Math.sin(t * 3) * 0.15;
+  // Preheater coils glow
+  coilMats.forEach((cm,idx)=>{
+    if(s.preheater&&!s.estop){
+      cm.emissiveIntensity=.62+Math.sin(t*2.6+idx*.85)*.28;
+      cm.color.setHex(0xff7722); cm.emissive.setHex(0xff4400);
+      phL.intensity=.42+Math.sin(t*3.5)*.15;
+      phL.color.setHex(0xff5500);
     } else {
-      cm.material.emissiveIntensity = 0;
-      cm.material.color.setHex(0x553322);
-      cm.material.emissive.setHex(0x000000);
-      preheaterLight.intensity = 0;
+      cm.emissiveIntensity=Math.max(0,cm.emissiveIntensity-.018);
+      if(cm.emissiveIntensity<.01){cm.color.setHex(0x553322);cm.emissive.setHex(0x000000);}
+      phL.intensity=Math.max(0,phL.intensity-.008);
     }
   });
 
-  if (s.ignition) {
-    sparkMesh.visible = (Math.sin(t * 40) > -0.2);
-    sparkMesh.scale.setScalar(0.6 + Math.random() * 1.8);
-    sparkMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-  } else {
-    sparkMesh.visible = false;
+  // Ignition spark
+  if(s.ign){spark.visible=(Math.sin(t*44)>-.1);spark.scale.setScalar(.4+Math.random()*2.5);spark.rotation.set(Math.random()*Math.PI*2,Math.random()*Math.PI*2,0);}
+  else spark.visible=false;
+
+  // FLAME — realistic multi-layer with organic movement
+  if((s.run||s.ign)&&!s.estop){
+    const fl=(v,f1,f2,ph)=>v+Math.sin(t*f1+ph)*f2;
+
+    // Core (blue-white)
+    flCoreMat.opacity=Math.min(1,(s.run?.88:.5)*(fl(.82,22,.14,0)+Math.sin(t*38)*.06));
+    flCoreMat.emissiveIntensity=3.5+Math.sin(t*19)*.9;
+    flCore.scale.set(fl(.96,15,.1,1),fl(.9,18,.12,2),fl(.96,15,.1,3));
+    flCore.rotation.z=Math.sin(t*4)*.04;
+
+    // Middle (orange)
+    flMidMat.opacity=(s.run?.75:.42)*(fl(.85,9,.12,1)+Math.sin(t*17)*.07);
+    flMidMat.emissiveIntensity=2.4+Math.sin(t*8)*.65;
+    flMid.scale.set(fl(.94,7,.1,2),fl(.88,11,.13,0),fl(.94,7,.1,1));
+    flMid.rotation.z=Math.sin(t*3)*.06;
+
+    // Outer (yellow-orange)
+    flOutMat.opacity=(s.run?.58:.3)*(fl(.88,6,.1,3)+Math.sin(t*13)*.06);
+    flOutMat.emissiveIntensity=1.5+Math.sin(t*6)*.45;
+    flOut.scale.set(fl(.96,5,.08,0),fl(.92,7,.1,1),fl(.96,5,.08,2));
+
+    // Yellow tip
+    flTipMat.opacity=(s.run?.65:.35)*(fl(.82,12,.14,2)+Math.sin(t*21)*.07);
+    flTipMat.emissiveIntensity=2.0+Math.sin(t*10)*.6;
+    flTip.scale.set(fl(.9,16,.12,1),fl(.85,20,.14,0),fl(.9,16,.12,2));
+    flTip.position.z=-.68+Math.sin(t*6)*.04;
+
+    // Wisps
+    wisps.forEach(({m,mat,ph,sp})=>{
+      const wf=.5+Math.sin(t*sp+ph)*.5;
+      mat.opacity=(s.run?.58:.32)*wf;
+      mat.emissiveIntensity=1.2+Math.sin(t*sp*1.4+ph)*.45;
+      m.scale.setScalar(.7+Math.sin(t*sp*.7+ph)*.35);
+      m.rotation.z+=.018*Math.sin(t*sp+ph);
+    });
+
+    // Lights
+    const lv1=1.8+Math.sin(t*11)*.75+Math.sin(t*23)*.35;
+    const lv2=1.0+Math.sin(t*8+1)*.5;
+    const lv3=.65+Math.sin(t*14+2)*.4;
+    fL1.intensity=s.run?lv1*2.4:lv1*1.2; fL1.color.setHSL(.05+Math.sin(t*3)*.02,1,.5);
+    fL2.intensity=s.run?lv2*1.6:lv2*.8;  fL2.color.setHSL(.08+Math.sin(t*2+1)*.02,1,.55);
+    fL3.intensity=s.run?lv3*1.1:lv3*.55;
+
+    // Zone glows
+    pGM.opacity=.42+Math.sin(t*7)*.15; pGM.emissiveIntensity=.32+Math.sin(t*5)*.12;
+    sGM.opacity=s.run?(.28+Math.sin(t*5)*.1):.06; sGM.emissiveIntensity=s.run?(.2+Math.sin(t*4)*.08):.02;
+    dGM.opacity=s.run?(.14+Math.sin(t*3)*.06):0; dGM.emissiveIntensity=s.run?(.09+Math.sin(t*3)*.03):0;
+
+  } else if(!s.ign){
+    flCoreMat.opacity=Math.max(0,flCoreMat.opacity-.022);
+    flMidMat.opacity=Math.max(0,flMidMat.opacity-.018);
+    flOutMat.opacity=Math.max(0,flOutMat.opacity-.014);
+    flTipMat.opacity=Math.max(0,flTipMat.opacity-.016);
+    wisps.forEach(({mat})=>{mat.opacity=Math.max(0,mat.opacity-.016);});
+    fL1.intensity=Math.max(0,fL1.intensity-.055);
+    fL2.intensity=Math.max(0,fL2.intensity-.04);
+    fL3.intensity=Math.max(0,fL3.intensity-.03);
+    pGM.opacity=Math.max(0,pGM.opacity-.01); pGM.emissiveIntensity=Math.max(0,pGM.emissiveIntensity-.01);
+    sGM.opacity=Math.max(0,sGM.opacity-.008);
+    dGM.opacity=Math.max(0,dGM.opacity-.006);
   }
 
-  if (s.fullRun && !s.estop) {
-    flameMesh.visible = true;
-    const flicker = 0.82 + Math.sin(t * 9) * 0.12 + Math.sin(t * 17 + 1) * 0.07;
-    flameMesh.scale.set(flicker * (0.9 + Math.sin(t * 5) * 0.1), flicker, flicker);
-    flameMat.opacity = 0.55 + Math.sin(t * 6) * 0.18;
-    flameLight.intensity = 1.8 + Math.sin(t * 8) * 0.55;
-    flameLight.color.setHSL(0.055 + Math.sin(t * 3) * 0.015, 1, 0.5);
-    primMat.emissiveIntensity = 0.35 + Math.sin(t * 5) * 0.12;
-    primMat.opacity = 0.45 + Math.sin(t * 7) * 0.15;
-    secMat.emissiveIntensity = 0.18 + Math.sin(t * 4) * 0.08;
-    secMat.opacity = 0.3 + Math.sin(t * 6) * 0.1;
-    dilMat.opacity = 0.12 + Math.sin(t * 3) * 0.05;
-  } else if (!s.ignition) {
-    flameMesh.visible = false;
-    flameLight.intensity *= 0.92;
-    primMat.emissiveIntensity = 0; primMat.opacity = 0;
-    secMat.emissiveIntensity = 0;  secMat.opacity = 0;
-    dilMat.opacity = 0;
-  }
+  // Particles
+  updPS(airPS,airCrv,.09,s.blower&&!s.estop,t);
+  updPS(h2PS, h2Crv, .17,s.h2v&&!s.estop,t);
+  updPS(kPS,  keroCrv,.14,s.kero&&!s.estop,t);
+  updPS(exPS, exhCrv,.18,s.run&&!s.estop,t);
+  updPS(smoPS,exhCrv,.10,s.run&&!s.estop,t);
 
-  updateParticles(airParts,  airCurve,  0.10, s.blower && !s.estop);
-  updateParticles(h2Parts,   h2Curve,   0.15, s.h2Valve && !s.estop);
-  updateParticles(keroParts, keroCurve, 0.13, s.keroPump && !s.estop);
-  updateParticles(exhParts,  exhCurve,  0.17, s.fullRun && !s.estop);
+  // Sensor LEDs blink
+  sensorLeds.forEach((lm,i)=>{
+    lm.emissiveIntensity=(s.run&&!s.estop)?(Math.sin(t*2.6+i*1.1)>0?1.2:.1):0;
+  });
+  fdLed.emissiveIntensity=(s.run&&!s.estop)?1.5+Math.sin(t*4.5)*.4:.3;
+  afsLed.emissiveIntensity=(s.blower&&!s.estop)?.8+Math.sin(t*5.5)*.3:.1;
 
-  sensorLEDs.forEach((led, i) => {
-    led.material.emissiveIntensity = (s.fullRun && !s.estop)
-      ? (Math.sin(t * 2.8 + i * 1.1) > 0 ? 1.2 : 0.1) : 0;
+  // DAQ LEDs pulse
+  daqLeds.forEach((dm,i)=>{
+    dm.emissiveIntensity=(s.blower&&!s.estop)?.42+Math.sin(t*3.2+i*.72)*.38:0;
+  });
+  daqGM.emissiveIntensity=(s.run&&!s.estop)?.48+Math.sin(t*2.3)*.14:0;
+
+  // Signal wire pulse
+  wireMats.forEach((wm,i)=>{
+    wm.emissiveIntensity=(s.run&&!s.estop)?.3+Math.sin(t*4.5+i*1.9)*.24:0;
   });
 
-  fdLED.material.emissiveIntensity = (s.fullRun && !s.estop) ? 1.5 + Math.sin(t * 4) * 0.4 : 0.3;
+  // Alarm
+  if(s.estop){alGM.emissiveIntensity=0;alYM.emissiveIntensity=0;alRM.emissiveIntensity=1.2+Math.sin(t*7)*.7;}
+  else if(s.ign){alGM.emissiveIntensity=.5;alYM.emissiveIntensity=1+Math.sin(t*10)*.65;alRM.emissiveIntensity=0;}
+  else if(s.run){alGM.emissiveIntensity=1.1;alYM.emissiveIntensity=0;alRM.emissiveIntensity=0;}
+  else if(s.blower){alGM.emissiveIntensity=.5+Math.sin(t*2.2)*.3;alYM.emissiveIntensity=0;alRM.emissiveIntensity=0;}
+  else{alGM.emissiveIntensity=.18;alYM.emissiveIntensity=0;alRM.emissiveIntensity=0;}
 
-  daqLEDs.forEach((dl, i) => {
-    dl.material.emissiveIntensity = (s.blower && !s.estop)
-      ? 0.4 + Math.sin(t * 3 + i * 0.7) * 0.35 : 0;
-  });
-  daqGlowMat.emissiveIntensity = (s.fullRun && !s.estop) ? 0.4 + Math.sin(t * 2) * 0.1 : 0;
-
-  wireMeshes.forEach((wm, i) => {
-    wm.material.emissiveIntensity = (s.fullRun && !s.estop)
-      ? 0.25 + Math.sin(t * 4 + i * 1.8) * 0.2 : 0;
-  });
-
-  if (s.estop) {
-    al_green.material.emissiveIntensity  = 0;
-    al_yellow.material.emissiveIntensity = 0;
-    al_red.material.emissiveIntensity    = 1 + Math.sin(t * 7) * 0.6;
-  } else if (s.ignition) {
-    al_green.material.emissiveIntensity  = 0.5;
-    al_yellow.material.emissiveIntensity = 1 + Math.sin(t * 10) * 0.6;
-    al_red.material.emissiveIntensity    = 0;
-  } else if (s.fullRun) {
-    al_green.material.emissiveIntensity  = 1.0;
-    al_yellow.material.emissiveIntensity = 0;
-    al_red.material.emissiveIntensity    = 0;
-  } else if (s.blower) {
-    al_green.material.emissiveIntensity  = 0.5 + Math.sin(t * 2) * 0.3;
-    al_yellow.material.emissiveIntensity = 0;
-    al_red.material.emissiveIntensity    = 0;
-  } else {
-    al_green.material.emissiveIntensity  = 0.2;
-    al_yellow.material.emissiveIntensity = 0;
-    al_red.material.emissiveIntensity    = 0;
-  }
-
-  switchMeshes.forEach((sw, i) => {
-    const on = (s.blower && i < 2) || (s.preheater && i < 3) || (s.h2Valve && i < 4) || (s.keroPump && i < 5) || (s.fullRun && i < 6);
-    sw.material.color.setHex(on ? 0x00aa66 : 0x334455);
+  // Panel switches animate
+  swMeshes.forEach((sw,i)=>{
+    const on=(s.blower&&i<2)||(s.preheater&&i<3)||(s.h2v&&i<4)||(s.kero&&i<5)||(s.run&&i<6);
+    sw.material.color.setHex(on?0x00aa55:0x334455);
   });
 
-  updateSensors();
-  updateDashboard();
-  controls.update();
-  renderer.render(scene, camera);
+  upSens(); upDash(); orb.update();
+  renderer.render(scene,cam);
 }
-
 animate();
 </script>
 </body>
