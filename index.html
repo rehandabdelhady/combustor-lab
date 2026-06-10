@@ -3,181 +3,34 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gas Turbine Combustor — Digital Twin v4 Flame</title>
-
+<title>Lab-Scale Gas Turbine Combustor Digital Twin</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  background:#04080f;
-  color:#c8d8e8;
-  font-family:"Courier New",monospace;
-  overflow:hidden;
-  user-select:none;
-}
-#cc{position:fixed;inset:0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{overflow:hidden;background:#020711;color:#d9ecff;font-family:"Courier New",monospace;user-select:none}
+#app{position:fixed;inset:0}
 canvas{display:block}
-
-#info{
-  position:fixed;
-  top:14px;
-  left:14px;
-  background:rgba(3,8,18,.96);
-  border:1px solid rgba(0,80,200,.3);
-  border-radius:4px;
-  padding:8px 11px;
-  font-size:8px;
-  color:#2a4a6a;
-  letter-spacing:1px;
-  line-height:2;
-  z-index:20;
-}
-#info b{color:#3a8eff}
-
-#dash{
-  position:fixed;
-  top:14px;
-  right:14px;
-  width:250px;
-  background:rgba(3,8,18,.97);
-  border:1px solid rgba(0,100,220,.34);
-  border-radius:4px;
-  padding:11px 13px;
-  box-shadow:0 0 28px rgba(0,60,200,.18);
-  z-index:20;
-}
-.dt{
-  font-size:9px;
-  letter-spacing:2.5px;
-  color:#2a7eff;
-  text-transform:uppercase;
-  border-bottom:1px solid rgba(0,80,200,.25);
-  padding-bottom:5px;
-  margin-bottom:8px;
-}
-.dr{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:4px;
-}
-.dl{
-  font-size:8px;
-  color:#3a5a7a;
-  letter-spacing:.8px;
-  text-transform:uppercase;
-}
-.dv{
-  font-size:9.5px;
-  color:#00e5ff;
-  font-weight:bold;
-}
-.dv.ok{color:#00ff88}
-.dv.w{color:#ffaa00}
-.dv.al{color:#ff3344}
-.dd{
-  border-top:1px solid rgba(0,60,140,.3);
-  margin:6px 0;
-}
-.sb{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  margin-bottom:8px;
-}
-.sd{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:#2a4a2a;
-}
-.sd.run{background:#00ff88;box-shadow:0 0 8px #00ff88;animation:gp 1.8s infinite}
-.sd.ign{background:#ffaa00;box-shadow:0 0 7px #ffaa00;animation:gp .5s infinite}
-.sd.es{background:#ff3344;box-shadow:0 0 7px #ff3344;animation:gp .3s infinite}
-.sd.st{background:#4a9eff;box-shadow:0 0 6px #4a9eff;animation:gp 2s infinite}
-@keyframes gp{0%,100%{opacity:1}50%{opacity:.25}}
-.st{font-size:9px;letter-spacing:2px}
-
-#ctrl{
-  position:fixed;
-  bottom:14px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(3,8,18,.97);
-  border:1px solid rgba(0,100,220,.32);
-  border-radius:4px;
-  padding:9px 16px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:center;
-  box-shadow:0 0 22px rgba(0,60,200,.14);
-  z-index:20;
-}
-.cb{
-  padding:6px 11px;
-  border:1px solid #1a5a8c;
-  background:rgba(0,60,140,.25);
-  color:#4a9eff;
-  font-family:"Courier New",monospace;
-  font-size:8.5px;
-  letter-spacing:1.5px;
-  cursor:pointer;
-  border-radius:2px;
-  text-transform:uppercase;
-  white-space:nowrap;
-}
-.cb:hover{background:rgba(0,110,240,.4);border-color:#4a9eff;color:#fff}
-.cb.es{border-color:#7c1a1a;background:rgba(130,0,0,.25);color:#ff4455}
-.cb.es:hover{background:rgba(220,20,40,.45);border-color:#ff4455}
-.cb.on{background:rgba(0,160,80,.16);border-color:#00ff88;color:#00ff88}
-.dv2{width:1px;height:34px;background:rgba(0,80,200,.28)}
-
-.sw{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:3px;
-  min-width:110px;
-}
-.sl{font-size:8px;color:#3a5a7a;letter-spacing:1.2px}
-.sv{font-size:9px;color:#00e5ff}
-input[type=range]{
-  -webkit-appearance:none;
-  width:105px;
-  height:3px;
-  background:linear-gradient(to right,#00e5ff 0%,#163252 100%);
-  border-radius:2px;
-  outline:none;
-  cursor:pointer;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;
-  width:11px;
-  height:11px;
-  border-radius:50%;
-  background:#00e5ff;
-  box-shadow:0 0 5px #00e5ff;
-}
-
-#seqlog{
-  position:fixed;
-  bottom:72px;
-  left:14px;
-  width:205px;
-  background:rgba(3,8,18,.97);
-  border:1px solid rgba(0,80,200,.25);
-  border-radius:4px;
-  padding:7px 11px;
-  font-size:8px;
-  letter-spacing:.8px;
-  line-height:2.1;
-  z-index:20;
-}
-.sq{color:#253545}
-.sq.done{color:#00ff88}
-.sq.act{color:#00e5ff;animation:bl .6s infinite}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:.15}}
+.hud{position:fixed;z-index:20;background:rgba(2,8,20,.86);border:1px solid rgba(59,130,246,.45);box-shadow:0 0 30px rgba(14,165,233,.18);backdrop-filter:blur(10px)}
+#title{top:12px;left:12px;padding:10px 14px;border-radius:6px;color:#7dd3fc;font-size:11px;letter-spacing:1.4px;line-height:1.8}
+#title b{color:#dbeafe}
+#monitor{top:12px;right:12px;width:270px;padding:14px;border-radius:6px}
+.hd{font-size:12px;color:#60a5fa;letter-spacing:2px;margin-bottom:10px;border-bottom:1px solid rgba(59,130,246,.25);padding-bottom:7px}
+.row{display:flex;justify-content:space-between;gap:12px;margin:6px 0;font-size:11px;color:#7f96aa}
+.row b{color:#22d3ee}
+.ok{color:#22c55e!important}.warn{color:#facc15!important}.bad{color:#ef4444!important}
+#seq{left:12px;bottom:94px;width:275px;padding:13px;border-radius:6px;font-size:11px}
+#seq .item{margin:7px 0;color:#486071}
+#seq .done{color:#22c55e}.run{color:#22d3ee;animation:blink .55s infinite}
+@keyframes blink{50%{opacity:.25}}
+#ctrl{left:50%;bottom:18px;transform:translateX(-50%);padding:12px 16px;border-radius:6px;display:flex;gap:12px;align-items:center}
+button{font-family:"Courier New",monospace;font-weight:700;letter-spacing:1.2px;padding:10px 18px;border-radius:4px;cursor:pointer;background:#061826;color:#22c55e;border:1px solid #22c55e}
+button:hover{background:#0b2a3f}
+button.red{color:#ef4444;border-color:#ef4444}
+button.blue{color:#60a5fa;border-color:#60a5fa}
+button.yellow{color:#facc15;border-color:#facc15}
+.slider{display:flex;flex-direction:column;align-items:center;color:#93c5fd;font-size:10px;gap:3px;min-width:145px}
+input[type=range]{width:135px;accent-color:#22d3ee}
+#sound{top:12px;left:50%;transform:translateX(-50%);padding:9px 18px;border-radius:6px;color:#93c5fd;font-size:11px;cursor:pointer}
+.badge{position:fixed;z-index:22;padding:4px 8px;border:1px solid rgba(125,211,252,.45);border-radius:4px;background:rgba(2,8,20,.75);font-size:10px;color:#e0f2fe;pointer-events:none}
 </style>
 
 <script type="importmap">
@@ -191,1037 +44,490 @@ input[type=range]::-webkit-slider-thumb{
 </head>
 
 <body>
-<div id="cc"></div>
+<div id="app"></div>
 
-<div id="info">
-  <b>GAS TURBINE COMBUSTOR · DIGITAL TWIN v4.1</b><br>
-  Drag: Orbit · Scroll: Zoom · Right: Pan
+<div id="title" class="hud">
+  <b>GAS TURBINE COMBUSTOR · DIGITAL TWIN v5.0</b><br>
+  Procedural 3D · no image background · drag orbit · scroll zoom
 </div>
 
-<div id="dash">
-  <div class="dt">▸ System Monitor</div>
-  <div class="sb"><div class="sd" id="sdot"></div><span class="st" id="stxt">STANDBY</span></div>
+<button id="sound" class="hud" onclick="enableSound()">🔊 ENABLE SOUND</button>
 
-  <div class="dr"><span class="dl">T1 Inlet Air</span><span class="dv" id="vt1">-- °C</span></div>
-  <div class="dr"><span class="dl">T2 Preheater Out</span><span class="dv" id="vt2">-- °C</span></div>
-  <div class="dr"><span class="dl">T3 Primary Zone</span><span class="dv" id="vt3">-- °C</span></div>
-  <div class="dr"><span class="dl">T4 Exhaust</span><span class="dv" id="vt4">-- °C</span></div>
-
-  <div class="dd"></div>
-
-  <div class="dr"><span class="dl">P1 Chamber</span><span class="dv" id="vp1">-- bar</span></div>
-  <div class="dr"><span class="dl">P2 Nozzle Exit</span><span class="dv" id="vp2">-- bar</span></div>
-
-  <div class="dd"></div>
-
-  <div class="dr"><span class="dl">Air Mass Flow</span><span class="dv" id="vaf">-- g/s</span></div>
-  <div class="dr"><span class="dl">H₂ Mass Flow</span><span class="dv" id="vhf">-- g/s</span></div>
-  <div class="dr"><span class="dl">Kerosene Flow</span><span class="dv" id="vkf">-- g/s</span></div>
-
-  <div class="dd"></div>
-
-  <div class="dr"><span class="dl">Combustion Eff.</span><span class="dv ok" id="veff">-- %</span></div>
-  <div class="dr"><span class="dl">Equiv. Ratio φ</span><span class="dv" id="vphi">--</span></div>
-  <div class="dr"><span class="dl">Flame</span><span class="dv" id="vflame">OFF</span></div>
-  <div class="dr"><span class="dl">Alarm</span><span class="dv ok" id="valarm">NORMAL</span></div>
+<div id="monitor" class="hud">
+  <div class="hd">▸ SYSTEM MONITOR</div>
+  <div class="row"><span>Status</span><b id="status" class="ok">STANDBY</b></div>
+  <div class="row"><span>T1 Inlet Air</span><b id="t1">-- °C</b></div>
+  <div class="row"><span>T2 Preheater Out</span><b id="t2">-- °C</b></div>
+  <div class="row"><span>T3 Primary Zone</span><b id="t3">-- °C</b></div>
+  <div class="row"><span>T4 Exhaust</span><b id="t4">-- °C</b></div>
+  <div class="row"><span>P1 Chamber</span><b id="p1">-- bar</b></div>
+  <div class="row"><span>P2 Nozzle Exit</span><b id="p2">-- bar</b></div>
+  <div class="row"><span>Air Mass Flow</span><b id="air">-- g/s</b></div>
+  <div class="row"><span>H₂ Mass Flow</span><b id="h2flow">-- g/s</b></div>
+  <div class="row"><span>Kerosene Flow</span><b id="kflow">-- g/s</b></div>
+  <div class="row"><span>Efficiency</span><b id="eff">-- %</b></div>
+  <div class="row"><span>Flame</span><b id="flameState">OFF</b></div>
+  <div class="row"><span>Alarm</span><b id="alarm" class="ok">NORMAL</b></div>
 </div>
 
-<div id="ctrl">
-  <button class="cb" id="bstart" onclick="startNext()">▶ Start</button>
-  <div class="dv2"></div>
-  <button class="cb" id="bign" onclick="autoIgn()">⚡ Auto-Ignition</button>
-  <div class="dv2"></div>
-  <button class="cb es" onclick="eStop()">■ E-STOP</button>
-  <div class="dv2"></div>
-  <button class="cb" onclick="resetSys()">↺ Reset</button>
-  <div class="dv2"></div>
+<div id="seq" class="hud">
+  <div class="hd">▸ SEQUENCE STATUS</div>
+  <div class="item" id="s1">○ Blower Motor</div>
+  <div class="item" id="s2">○ Preheater Active</div>
+  <div class="item" id="s3">○ H₂ Solenoid Open</div>
+  <div class="item" id="s4">○ Kerosene Pump</div>
+  <div class="item" id="s5">○ Ignition Sequence</div>
+  <div class="item" id="s6">○ Full Operation</div>
+</div>
 
-  <div class="sw">
-    <span class="sl">H₂ Blend</span>
-    <input type="range" id="h2sl" min="0" max="50" value="20" oninput="setH2(this.value)">
-    <span class="sv" id="h2v">20 %</span>
+<div id="ctrl" class="hud">
+  <button onclick="startNext()">▶ START</button>
+  <button class="yellow" onclick="autoIgnition()">⚡ AUTO-IGNITION</button>
+  <button class="red" onclick="eStop()">■ E-STOP</button>
+  <button class="blue" onclick="resetSystem()">↺ RESET</button>
+  <div class="slider">
+    <span>H₂ BLEND RATIO</span>
+    <input id="blend" type="range" min="0" max="50" value="20" oninput="setBlend(this.value)">
+    <span id="blendText">20 %</span>
   </div>
-</div>
-
-<div id="seqlog">
-  <div class="sq" id="sq1">① Blower Motor</div>
-  <div class="sq" id="sq2">② Preheater Active</div>
-  <div class="sq" id="sq3">③ H₂ Solenoid Open</div>
-  <div class="sq" id="sq4">④ Kerosene Pump</div>
-  <div class="sq" id="sq5">⑤ Ignition Sequence</div>
-  <div class="sq" id="sq6">⑥ Full Operation</div>
 </div>
 
 <script type="module">
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-const renderer = new THREE.WebGLRenderer({ antialias:true, logarithmicDepthBuffer:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.45;
-document.getElementById("cc").appendChild(renderer.domElement);
+let step=0, h2=20, autoBusy=false;
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050a12);
-scene.fog = new THREE.FogExp2(0x050a12, 0.006);
+/* ================= SCENE ================= */
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x020711);
+scene.fog=new THREE.FogExp2(0x020711,0.012);
 
-const cam = new THREE.PerspectiveCamera(44, innerWidth / innerHeight, 0.05, 300);
-cam.position.set(0, 4.4, 12);
-cam.lookAt(0, 1.1, 0);
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.05,300);
+camera.position.set(0,4.9,13.5);
 
-const orb = new OrbitControls(cam, renderer.domElement);
-orb.enableDamping = true;
-orb.dampingFactor = 0.055;
-orb.minDistance = 3;
-orb.maxDistance = 35;
-orb.target.set(0, 1.1, 0);
+const renderer=new THREE.WebGLRenderer({antialias:true,logarithmicDepthBuffer:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.35;
+document.getElementById("app").appendChild(renderer.domElement);
 
-addEventListener("resize", () => {
-  cam.aspect = innerWidth / innerHeight;
-  cam.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.06;
+controls.target.set(0,1.2,0);
+controls.minDistance=5;
+controls.maxDistance=28;
+
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
 });
 
-scene.add(new THREE.AmbientLight(0x1c3355, 2.2));
-
-const sun = new THREE.DirectionalLight(0x9fc8ff, 2.3);
-sun.position.set(8, 14, 8);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-scene.add(sun);
-
-const rim = new THREE.DirectionalLight(0x2255aa, 1.2);
-rim.position.set(-10, 4, -6);
-scene.add(rim);
-
-const flameLight = new THREE.PointLight(0xff5500, 0, 9);
-flameLight.position.set(0.2, 1.45, 0);
-scene.add(flameLight);
-
-const combustionGlow = new THREE.PointLight(0xff6600, 0, 6);
-combustionGlow.position.set(-0.8, 1.15, 0);
-scene.add(combustionGlow);
-
-const preheaterLight = new THREE.PointLight(0xff6600, 0, 5);
-preheaterLight.position.set(-3.45, 1.25, 0);
-scene.add(preheaterLight);
-
-const M = {
-  steelDark: new THREE.MeshStandardMaterial({ color:0x26313c, metalness:.9, roughness:.32 }),
-  steel: new THREE.MeshStandardMaterial({ color:0x667788, metalness:.88, roughness:.26 }),
-  steelBright: new THREE.MeshStandardMaterial({ color:0x9aabbc, metalness:.82, roughness:.18 }),
-  black: new THREE.MeshStandardMaterial({ color:0x101820, metalness:.45, roughness:.65 }),
-  rubber: new THREE.MeshStandardMaterial({ color:0x080808, metalness:.02, roughness:.95 }),
-  copper: new THREE.MeshStandardMaterial({ color:0xb87333, metalness:.8, roughness:.25 }),
-  air: new THREE.MeshStandardMaterial({ color:0x2266cc, metalness:.65, roughness:.3 }),
-  h2: new THREE.MeshStandardMaterial({ color:0xd51111, metalness:.65, roughness:.3 }),
-  kero: new THREE.MeshStandardMaterial({ color:0xd99600, metalness:.6, roughness:.3 }),
-  blueTank: new THREE.MeshStandardMaterial({ color:0x153a70, metalness:.82, roughness:.24 }),
-  redTank: new THREE.MeshStandardMaterial({ color:0xb50d0d, metalness:.82, roughness:.24 }),
-  yellowTank: new THREE.MeshStandardMaterial({ color:0xc98500, metalness:.78, roughness:.25 }),
-  panel: new THREE.MeshStandardMaterial({ color:0x15212b, metalness:.35, roughness:.7 })
+/* ================= MATERIALS ================= */
+const mat={
+  steel:new THREE.MeshStandardMaterial({color:0x6f7f8f,metalness:.86,roughness:.23}),
+  steelDark:new THREE.MeshStandardMaterial({color:0x1c2732,metalness:.9,roughness:.32}),
+  steelBlack:new THREE.MeshStandardMaterial({color:0x080d13,metalness:.7,roughness:.5}),
+  bright:new THREE.MeshStandardMaterial({color:0xb8c6d5,metalness:.82,roughness:.17}),
+  rubber:new THREE.MeshStandardMaterial({color:0x050505,roughness:.9}),
+  copper:new THREE.MeshStandardMaterial({color:0xb87333,metalness:.8,roughness:.26}),
+  air:new THREE.MeshStandardMaterial({color:0x1769d1,metalness:.58,roughness:.28}),
+  h2:new THREE.MeshStandardMaterial({color:0xc41414,metalness:.6,roughness:.29}),
+  ker:new THREE.MeshStandardMaterial({color:0xd99a00,metalness:.58,roughness:.3}),
+  panel:new THREE.MeshStandardMaterial({color:0x111b25,metalness:.4,roughness:.7}),
+  glass:new THREE.MeshPhysicalMaterial({color:0xcde9ff,transparent:true,opacity:.22,transmission:.82,roughness:.025,metalness:0,side:THREE.DoubleSide,thickness:.06,ior:1.45}),
+  glassDark:new THREE.MeshPhysicalMaterial({color:0x9fd7ff,transparent:true,opacity:.14,transmission:.9,roughness:.02,metalness:0,side:THREE.DoubleSide,thickness:.06,ior:1.45})
 };
 
-const glass = new THREE.MeshPhysicalMaterial({
-  color:0xbddcff,
-  metalness:.02,
-  roughness:.015,
-  transmission:.9,
-  transparent:true,
-  opacity:.22,
-  side:THREE.DoubleSide,
-  thickness:.06,
-  ior:1.45
-});
+const CY=(r1,r2,h,s=48)=>new THREE.CylinderGeometry(r1,r2,h,s);
+const BX=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
+const SP=(r,w=32,h=18)=>new THREE.SphereGeometry(r,w,h);
+const TR=(r,t,rs=10,ts=72)=>new THREE.TorusGeometry(r,t,rs,ts);
 
-const linerMat = new THREE.MeshStandardMaterial({
-  color:0x40586a,
-  metalness:.75,
-  roughness:.3,
-  transparent:true,
-  opacity:.54,
-  side:THREE.DoubleSide
-});
-
-const CY = (r1, r2, h, s=36) => new THREE.CylinderGeometry(r1, r2, h, s);
-const BX = (w, h, d) => new THREE.BoxGeometry(w, h, d);
-const SP = (r, w=24, h=16) => new THREE.SphereGeometry(r, w, h);
-const TR = (r, t, rs=8, ts=48) => new THREE.TorusGeometry(r, t, rs, ts);
-
-function add(geo, mat, x=0, y=0, z=0, rx=0, ry=0, rz=0, parent=scene){
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(x, y, z);
-  mesh.rotation.set(rx, ry, rz);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+function add(geo,m,x=0,y=0,z=0,rx=0,ry=0,rz=0,parent=scene){
+  const mesh=new THREE.Mesh(geo,m);
+  mesh.position.set(x,y,z);
+  mesh.rotation.set(rx,ry,rz);
+  mesh.castShadow=true;
+  mesh.receiveShadow=true;
   parent.add(mesh);
   return mesh;
 }
-
-function cylX(r, len, mat, x, y, z, s=36, parent=scene){
-  return add(CY(r, r, len, s), mat, x, y, z, 0, 0, Math.PI / 2, parent);
+function cylX(r,len,m,x,y,z,s=48,p=scene){return add(CY(r,r,len,s),m,x,y,z,0,0,Math.PI/2,p)}
+function cylY(r,len,m,x,y,z,s=48,p=scene){return add(CY(r,r,len,s),m,x,y,z,0,0,0,p)}
+function led(hex,intensity=0){
+  return new THREE.MeshStandardMaterial({color:hex,emissive:new THREE.Color(hex),emissiveIntensity:intensity,roughness:.2});
 }
-
-function cylY(r, len, mat, x, y, z, s=36, parent=scene){
-  return add(CY(r, r, len, s), mat, x, y, z, 0, 0, 0, parent);
-}
-
-function tube(points, mat, r=.025, seg=60){
-  const curve = new THREE.CatmullRomCurve3(points);
-  const geo = new THREE.TubeGeometry(curve, seg, r, 10);
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow = true;
+function tube(points,m,r=.025,seg=90){
+  const curve=new THREE.CatmullRomCurve3(points);
+  const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,seg,r,12),m);
+  mesh.castShadow=true;
   scene.add(mesh);
-  return { mesh, curve };
+  return {mesh,curve};
 }
-
-function clampRing(x, y, z, r=.42){
-  const g = new THREE.Group();
-  g.position.set(x, y, z);
-  scene.add(g);
-
-  add(TR(r, .026, 8, 60), M.steelBright, 0, 0, 0, Math.PI / 2, 0, 0, g);
-  add(TR(r + .035, .012, 6, 60), M.steel, 0, 0, 0, Math.PI / 2, 0, 0, g);
-
-  for(let i=0;i<8;i++){
-    const a = i * Math.PI / 4;
-    const bolt = add(CY(.018, .018, .07, 8), M.steelBright, Math.cos(a)*r, Math.sin(a)*r, 0, Math.PI/2, 0, 0, g);
-    bolt.rotation.z = a;
+function clamp(x,y,z,r=.45){
+  const g=new THREE.Group(); g.position.set(x,y,z); scene.add(g);
+  add(TR(r,.025,10,72),mat.bright,0,0,0,Math.PI/2,0,0,g);
+  add(TR(r+.035,.011,8,72),mat.steel,0,0,0,Math.PI/2,0,0,g);
+  for(let i=0;i<12;i++){
+    const a=i*Math.PI/6;
+    const b=add(CY(.017,.017,.075,8),mat.bright,Math.cos(a)*r,Math.sin(a)*r,0,Math.PI/2,0,0,g);
+    b.rotation.z=a;
   }
-
-  return g;
+}
+function label(txt,x,y,z,scale=1){
+  const c=document.createElement("canvas"); c.width=512; c.height=128;
+  const ctx=c.getContext("2d");
+  ctx.fillStyle="rgba(2,8,20,.82)"; ctx.fillRect(0,0,512,128);
+  ctx.strokeStyle="#7dd3fc"; ctx.lineWidth=5; ctx.strokeRect(5,5,502,118);
+  ctx.fillStyle="#e0f2fe"; ctx.font="bold 34px Arial"; ctx.textAlign="center"; ctx.fillText(txt,256,78);
+  const tex=new THREE.CanvasTexture(c);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+  sp.position.set(x,y,z); sp.scale.set(1.1*scale,.28*scale,1);
+  scene.add(sp);
 }
 
-function ledMat(hex, intensity=0){
-  return new THREE.MeshStandardMaterial({
-    color:hex,
-    emissive:new THREE.Color(hex),
-    emissiveIntensity:intensity,
-    roughness:.25
-  });
-}
+/* ================= LIGHTS ================= */
+scene.add(new THREE.AmbientLight(0x233e66,2.2));
+const key=new THREE.DirectionalLight(0x9ecbff,2.7); key.position.set(7,12,8); key.castShadow=true; key.shadow.mapSize.set(2048,2048); scene.add(key);
+const rim=new THREE.DirectionalLight(0x2362ff,1.0); rim.position.set(-9,5,-7); scene.add(rim);
+const labBlue=new THREE.PointLight(0x1c7cff,2.0,20); labBlue.position.set(-2,4,5); scene.add(labBlue);
+const flameLight=new THREE.PointLight(0xff6600,0,10); flameLight.position.set(-.5,1.2,.25); scene.add(flameLight);
+const preLight=new THREE.PointLight(0xff6600,0,5); preLight.position.set(-3.35,1.2,0); scene.add(preLight);
 
-function label(text, x, y, z, scale=1){
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 128;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "rgba(2,6,23,.82)";
-  ctx.fillRect(0,0,512,128);
-  ctx.strokeStyle = "#38bdf8";
-  ctx.lineWidth = 5;
-  ctx.strokeRect(4,4,504,120);
-  ctx.fillStyle = "#e0f2fe";
-  ctx.font = "bold 34px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(text,256,78);
+/* ================= FLOOR AND FRAME ================= */
+add(new THREE.PlaneGeometry(60,50),new THREE.MeshStandardMaterial({color:0x050b15,roughness:.9}),0,-.11,0,-Math.PI/2,0,0).receiveShadow=true;
+const grid=new THREE.GridHelper(60,120,0x123e6e,0x07172b); grid.position.y=-.1; scene.add(grid);
 
-  const tex = new THREE.CanvasTexture(canvas);
-  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true }));
-  spr.position.set(x,y,z);
-  spr.scale.set(1.1*scale,.28*scale,1);
-  scene.add(spr);
-  return spr;
-}
-
-const floor = add(
-  new THREE.PlaneGeometry(50,50),
-  new THREE.MeshStandardMaterial({ color:0x060c18, roughness:.9, metalness:.05 }),
-  0,-.09,0,
-  -Math.PI/2,0,0
-);
-floor.receiveShadow = true;
-
-const grid = new THREE.GridHelper(50,100,0x0b2b50,0x081426);
-grid.position.y = -0.08;
-scene.add(grid);
-
-const AXIS_Y = 1.15;
-const AXIS_Z = 0;
-
-const X_BLOWER = -6.2;
-const X_PRE = -3.45;
-const X_CH = -0.55;
-const X_NOZ = 2.45;
-
-add(BX(16.5,.1,4.6), M.steelDark, 0,.04,0);
-for(const z of [-2.2,2.2]) add(BX(16.5,.08,.1), M.steel, 0,.12,z);
-for(let x=-7.5;x<=7.5;x+=1.5) add(BX(.08,.08,4.5), M.steel, x,.12,0);
-for(const lx of [-7.7,-4.5,-1.5,1.5,4.5,7.7]){
-  for(const lz of [-2.1,2.1]){
-    cylY(.055,1.35,M.steel,lx,-.62,lz,10);
-    cylY(.13,.06,M.rubber,lx,-1.32,lz,16);
+add(BX(17.2,.12,4.8),mat.steelBlack,0,.04,0);
+for(const z of [-2.25,2.25]) add(BX(17.2,.09,.12),mat.steelDark,0,.13,z);
+for(let x=-8;x<=8;x+=1.35) add(BX(.075,.08,4.8),mat.steelDark,x,.14,0);
+for(const x of [-7.8,-5,-2,1,4,7.6]){
+  for(const z of [-2.1,2.1]){
+    cylY(.055,1.3,mat.steelDark,x,-.58,z,12);
+    cylY(.14,.06,mat.rubber,x,-1.27,z,18);
   }
 }
 
-const blowerG = new THREE.Group();
-blowerG.position.set(X_BLOWER, AXIS_Y, AXIS_Z);
-scene.add(blowerG);
+/* ================= MAIN AXIS ================= */
+const Y=1.15, Z=0;
+const XB=-6.35, XP=-3.45, XC=-.35, XN=2.85;
 
-cylX(.62,.62,M.air,0,0,0,48,blowerG);
-cylX(.72,.08,M.steelBright,-.36,0,0,48,blowerG);
-cylX(.72,.08,M.steelBright,.36,0,0,48,blowerG);
-cylX(.36,.25,M.steelBright,.46,0,0,36,blowerG);
+/* ================= BLOWER ================= */
+const blower=new THREE.Group(); blower.position.set(XB,Y,Z); scene.add(blower);
+cylX(.72,.65,mat.air,0,0,0,64,blower);
+cylX(.82,.08,mat.bright,-.38,0,0,64,blower);
+cylX(.82,.08,mat.bright,.38,0,0,64,blower);
+cylX(.38,.33,mat.bright,.55,0,0,48,blower);
+add(BX(.95,.82,.82),new THREE.MeshStandardMaterial({color:0x163a78,metalness:.8,roughness:.3}),-.9,0,0,0,0,0,blower);
+for(let i=0;i<9;i++)add(BX(.98,.025,.86),mat.steelBlack,-.9,-.35+i*.09,0,0,0,0,blower);
+const fan=new THREE.Group(); blower.add(fan);
+for(let i=0;i<12;i++){const b=add(BX(.32,.045,.025),mat.bright,.2,0,0,0,.25,0,fan); b.rotation.z=i*Math.PI*2/12}
+cylX(.12,.13,mat.bright,0,0,0,24,fan);
 
-add(BX(.9,.75,.75), new THREE.MeshStandardMaterial({color:0x14325f,metalness:.8,roughness:.32}), -.85,0,0,0,0,0,blowerG);
-for(let i=0;i<8;i++) add(BX(.92,.025,.78), M.steelDark, -.85,-.31+i*.09,0,0,0,0,blowerG);
-
-const fanG = new THREE.Group();
-blowerG.add(fanG);
-for(let i=0;i<10;i++){
-  const blade = add(BX(.28,.045,.02), M.steelBright, .18,0,0,0,.25,0,fanG);
-  blade.rotation.z = i * Math.PI * 2 / 10;
-}
-cylX(.1,.12,M.steelBright,0,0,0,18,fanG);
-
-const preG = new THREE.Group();
-preG.position.set(X_PRE, AXIS_Y, AXIS_Z);
-scene.add(preG);
-
-cylX(.44,1.35,glass,0,0,0,64,preG);
-for(const x of [-.7,.7]) cylX(.48,.07,M.steel,x,0,0,48,preG);
-
-const coilMats = [];
+/* ================= PREHEATER ================= */
+const pre=new THREE.Group(); pre.position.set(XP,Y,Z); scene.add(pre);
+cylX(.48,1.38,mat.glass,0,0,0,72,pre);
+for(const x of [-.72,.72])cylX(.54,.08,mat.steel,x,0,0,64,pre);
+const coils=[];
 for(let c=0;c<5;c++){
-  const r = .14 + c*.055;
-  const pts = [];
-  for(let i=0;i<=400;i++){
-    const t = i / 400;
-    const ang = t * Math.PI * 24;
-    pts.push(new THREE.Vector3(t*1.12-.56, Math.cos(ang)*r, Math.sin(ang)*r));
-  }
-  const cm = new THREE.MeshStandardMaterial({
-    color:0x553322,
-    metalness:.65,
-    roughness:.35,
-    emissive:new THREE.Color(0x000000),
-    emissiveIntensity:0
-  });
-  const mesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),400,.011,8), cm);
-  preG.add(mesh);
-  coilMats.push(cm);
+  const r=.15+c*.056, pts=[];
+  for(let i=0;i<=480;i++){const u=i/480, a=u*Math.PI*27; pts.push(new THREE.Vector3(u*1.18-.59,Math.cos(a)*r,Math.sin(a)*r))}
+  const cm=new THREE.MeshStandardMaterial({color:0x5a2b12,metalness:.7,roughness:.32,emissive:new THREE.Color(0x000000),emissiveIntensity:0});
+  const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),480,.011,8),cm);
+  pre.add(mesh); coils.push(cm);
+}
+for(let x=-.55;x<=.55;x+=.28)clamp(XP+x,Y,Z,.48);
+
+/* ================= COMBUSTION CHAMBER ================= */
+const chamber=new THREE.Group(); chamber.position.set(XC,Y,Z); scene.add(chamber);
+cylX(.62,2.7,mat.glassDark,0,0,0,96,chamber);
+cylX(.42,2.42,new THREE.MeshStandardMaterial({color:0x3d5262,metalness:.75,roughness:.31,transparent:true,opacity:.48,side:THREE.DoubleSide}),0,0,0,72,chamber);
+for(const x of [-1.38,1.38])cylX(.72,.09,mat.steel,x,0,0,72,chamber);
+for(let x=-1.15;x<=1.15;x+=.25)add(TR(.42,.014,8,60),mat.steelDark,x,0,0,Math.PI/2,0,0,chamber);
+for(let x=-1.05;x<=1.05;x+=.2){for(let a=0;a<Math.PI*2;a+=Math.PI/6)add(SP(.015,8,8),mat.steelBlack,x,Math.cos(a)*.42,Math.sin(a)*.42,0,0,0,chamber)}
+
+const zoneP=new THREE.MeshStandardMaterial({color:0xff3300,emissive:new THREE.Color(0xff3300),transparent:true,opacity:0,emissiveIntensity:0,side:THREE.DoubleSide,depthWrite:false});
+const zoneS=new THREE.MeshStandardMaterial({color:0xff8800,emissive:new THREE.Color(0xff6600),transparent:true,opacity:0,emissiveIntensity:0,side:THREE.DoubleSide,depthWrite:false});
+const zoneD=new THREE.MeshStandardMaterial({color:0x3388ff,emissive:new THREE.Color(0x3366ff),transparent:true,opacity:0,emissiveIntensity:0,side:THREE.DoubleSide,depthWrite:false});
+cylX(.41,.78,zoneP,-.72,0,0,72,chamber);
+cylX(.41,.74,zoneS,.05,0,0,72,chamber);
+cylX(.41,.62,zoneD,.82,0,0,72,chamber);
+
+/* ================= NOZZLE ================= */
+const nozzle=new THREE.Group(); nozzle.position.set(XN,Y,Z); scene.add(nozzle);
+add(CY(.58,.25,.9,72),mat.steel,-.45,0,0,0,0,Math.PI/2,nozzle);
+add(CY(.25,.12,.75,60),mat.bright,.38,0,0,0,0,Math.PI/2,nozzle);
+add(TR(.58,.024,8,72),mat.bright,-.92,0,0,Math.PI/2,0,0,nozzle);
+
+/* ducts */
+cylX(.24,1.55,mat.steel,(XB+XP)/2,Y,Z,48); clamp(XB+.8,Y,Z,.31); clamp(XP-.82,Y,Z,.48);
+cylX(.27,1.75,mat.steel,(XP+XC)/2,Y,Z,52); clamp(XP+.82,Y,Z,.48); clamp(XC-1.46,Y,Z,.62);
+cylX(.30,1.55,mat.steel,(XC+XN)/2,Y,Z,60); clamp(XC+1.46,Y,Z,.62); clamp(XN-.95,Y,Z,.58);
+
+/* supports */
+for(const x of [XB,XP,XC-1.05,XC,XC+1.05,XN]){
+  add(BX(.14,.95,.14),mat.steelDark,x,.54,-.52);
+  add(BX(.14,.95,.14),mat.steelDark,x,.54,.52);
+  add(BX(.8,.09,1.15),mat.steelDark,x,.1,0);
 }
 
-for(let x=-.55;x<=.55;x+=.25) clampRing(X_PRE+x, AXIS_Y, AXIS_Z, .44);
+/* ================= TANKS AND LOWER LINES ================= */
+function tank(x,z,m,labelText){
+  const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  cylY(.34,.95,m,0,.62,0,34,g); add(SP(.34,28,16),m,0,1.09,0,0,0,0,g); add(SP(.34,28,16),m,0,.16,0,0,0,0,g);
+  cylY(.07,.25,mat.bright,0,1.5,0,12,g); cylY(.06,.08,mat.copper,0,1.68,0,12,g);
+  label(labelText,x,1.85,z,.72);
+}
+tank(-6.9,-1.45,new THREE.MeshStandardMaterial({color:0x153f89,metalness:.82,roughness:.24}),"AIR");
+tank(-5.85,-1.45,new THREE.MeshStandardMaterial({color:0xb81916,metalness:.82,roughness:.24}),"H₂");
+tank(-4.8,-1.45,new THREE.MeshStandardMaterial({color:0xbf8100,metalness:.78,roughness:.26}),"KEROSENE");
 
-const chG = new THREE.Group();
-chG.position.set(X_CH, AXIS_Y, AXIS_Z);
-scene.add(chG);
+/* filters/regulators/pump/manifold */
+for(const x of [-4.0,-3.35]){cylY(.08,.25,mat.bright,x,.82,-1.35,16); add(SP(.09,16,10),mat.bright,x,1.05,-1.35)}
+add(BX(.34,.24,.28),mat.ker,-2.45,.78,-1.35);
+add(BX(.2,.14,.12),mat.bright,-1.95,.78,-1.35);
+add(BX(.42,.30,.35),mat.bright,-1.35,1.05,-1.15);
 
-cylX(.58,2.45,glass,0,0,0,72,chG);
-cylX(.4,2.2,linerMat,0,0,0,64,chG);
+/* fuel lines */
+tube([new THREE.Vector3(-6.9,1.65,-1.45),new THREE.Vector3(-6.9,1.85,-.55),new THREE.Vector3(XB-.35,Y+.14,-.25)],mat.air,.03,80);
+tube([new THREE.Vector3(-5.85,1.65,-1.45),new THREE.Vector3(-5.85,1.75,-1.35),new THREE.Vector3(-3.35,1.05,-1.35),new THREE.Vector3(-1.35,1.05,-1.15),new THREE.Vector3(XC-.55,Y+.58,-.25)],mat.h2,.027,120);
+tube([new THREE.Vector3(-4.8,1.62,-1.45),new THREE.Vector3(-4.8,1.75,-1.35),new THREE.Vector3(-2.45,.92,-1.35),new THREE.Vector3(-1.35,1.05,-1.15),new THREE.Vector3(XC-.25,Y+.58,.25)],mat.ker,.027,120);
+tube([new THREE.Vector3(XC-.55,Y+.58,-.25),new THREE.Vector3(XC-.55,Y+.25,-.12)],mat.h2,.018,30);
+tube([new THREE.Vector3(XC-.25,Y+.58,.25),new THREE.Vector3(XC-.25,Y+.25,.12)],mat.ker,.018,30);
 
-for(const x of [-1.25,1.25]) cylX(.66,.08,M.steel,x,0,0,60,chG);
-for(let x=-1.0;x<=1.0;x+=.25) add(TR(.4,.013,6,48), M.steelDark, x,0,0, Math.PI/2,0,0,chG);
-
-for(let x=-.95;x<=.95;x+=.22){
-  for(let a=0;a<Math.PI*2;a+=Math.PI/5){
-    add(SP(.018,8,8), M.black, x, Math.cos(a)*.4, Math.sin(a)*.4, 0,0,0,chG);
-  }
+/* valves */
+for(const [x,m] of [[-3.05,mat.h2],[-2.08,mat.ker],[-1.65,mat.air]]){
+  add(BX(.18,.14,.16),mat.steelBlack,x,.94,-1.35); add(BX(.11,.05,.07),m,x,1.06,-1.35);
 }
 
-const zoneMats = {
-  primary: new THREE.MeshStandardMaterial({color:0xff2200,emissive:new THREE.Color(0xff2200),emissiveIntensity:0,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}),
-  secondary: new THREE.MeshStandardMaterial({color:0xff8800,emissive:new THREE.Color(0xff6600),emissiveIntensity:0,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}),
-  dilution: new THREE.MeshStandardMaterial({color:0x4488ff,emissive:new THREE.Color(0x2266ff),emissiveIntensity:0,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false})
-};
-
-cylX(.39,.75,zoneMats.primary,-.68,0,0,64,chG);
-cylX(.39,.72,zoneMats.secondary,.05,0,0,64,chG);
-cylX(.39,.65,zoneMats.dilution,.75,0,0,64,chG);
-
-const nozG = new THREE.Group();
-nozG.position.set(X_NOZ, AXIS_Y, AXIS_Z);
-scene.add(nozG);
-add(CY(.55,.25,.8,64), M.steel, -.35,0,0, 0,0,Math.PI/2,nozG);
-add(CY(.25,.12,.65,48), M.steelBright, .35,0,0, 0,0,Math.PI/2,nozG);
-add(TR(.55,.02,8,64), M.steelBright, -.75,0,0, Math.PI/2,0,0,nozG);
-add(TR(.12,.015,8,48), M.steelBright, .72,0,0, Math.PI/2,0,0,nozG);
-
-cylX(.22,1.45,M.steel,(X_BLOWER+X_PRE)/2,AXIS_Y,AXIS_Z,36);
-clampRing(X_BLOWER+.75,AXIS_Y,AXIS_Z,.28);
-clampRing(X_PRE-.78,AXIS_Y,AXIS_Z,.44);
-
-cylX(.25,1.55,M.steel,(X_PRE+X_CH)/2,AXIS_Y,AXIS_Z,40);
-clampRing(X_PRE+.78,AXIS_Y,AXIS_Z,.44);
-clampRing(X_CH-1.32,AXIS_Y,AXIS_Z,.58);
-
-cylX(.28,1.3,M.steel,(X_CH+X_NOZ)/2,AXIS_Y,AXIS_Z,44);
-clampRing(X_CH+1.32,AXIS_Y,AXIS_Z,.58);
-clampRing(X_NOZ-.78,AXIS_Y,AXIS_Z,.55);
-
-for(const x of [X_BLOWER, X_PRE, X_CH-1, X_CH, X_CH+1, X_NOZ]){
-  add(BX(.14,.9,.14), M.steelDark, x,.55,-.48);
-  add(BX(.14,.9,.14), M.steelDark, x,.55,.48);
-  add(BX(.75,.08,1.1), M.steelDark, x,.12,0);
-}
-
-function makeTank(x,z,mat){
-  const g = new THREE.Group();
-  g.position.set(x,0,z);
-  scene.add(g);
-  cylY(.32,.95,mat,0,.62,0,32,g);
-  add(SP(.32,24,14),mat,0,1.1,0,0,0,0,g);
-  add(SP(.32,24,14),mat,0,.15,0,0,0,0,g);
-  cylY(.07,.24,M.steelBright,0,1.48,0,12,g);
-  cylY(.06,.07,M.copper,0,1.64,0,12,g);
-}
-
-makeTank(-6.8,-1.45,M.blueTank);
-makeTank(-5.75,-1.45,M.redTank);
-makeTank(-4.7,-1.45,M.yellowTank);
-
-cylY(.08,.25,M.steelBright,-3.9,.8,-1.35,16);
-add(SP(.09,16,10),M.steelBright,-3.9,1.02,-1.35);
-
-cylY(.08,.25,M.steelBright,-3.25,.8,-1.35,16);
-add(SP(.09,16,10),M.steelBright,-3.25,1.02,-1.35);
-
-add(BX(.34,.24,.28),M.kero,-2.35,.77,-1.35);
-add(BX(.18,.14,.1),M.steelBright,-1.9,.77,-1.35);
-
-add(BX(.38,.28,.32),M.steelBright,-1.35,1.05,-1.15);
-
-tube([
-  new THREE.Vector3(-6.8,1.65,-1.45),
-  new THREE.Vector3(-6.8,1.85,-.6),
-  new THREE.Vector3(X_BLOWER-.4,AXIS_Y+.15,-.25)
-], M.air, .028, 70);
-
-tube([
-  new THREE.Vector3(-5.75,1.65,-1.45),
-  new THREE.Vector3(-5.75,1.75,-1.35),
-  new THREE.Vector3(-3.25,1.05,-1.35),
-  new THREE.Vector3(-1.35,1.05,-1.15),
-  new THREE.Vector3(X_CH-.55,AXIS_Y+.58,-.25)
-], M.h2, .026, 100);
-
-tube([
-  new THREE.Vector3(-4.7,1.6,-1.45),
-  new THREE.Vector3(-4.7,1.75,-1.35),
-  new THREE.Vector3(-2.35,.9,-1.35),
-  new THREE.Vector3(-1.35,1.05,-1.15),
-  new THREE.Vector3(X_CH-.28,AXIS_Y+.58,.25)
-], M.kero, .026, 100);
-
-tube([
-  new THREE.Vector3(X_CH-.55,AXIS_Y+.58,-.25),
-  new THREE.Vector3(X_CH-.55,AXIS_Y+.25,-.12)
-], M.h2, .018, 30);
-
-tube([
-  new THREE.Vector3(X_CH-.28,AXIS_Y+.58,.25),
-  new THREE.Vector3(X_CH-.28,AXIS_Y+.22,.12)
-], M.kero, .018, 30);
-
-add(BX(.16,.14,.16),M.black,-3.0,.92,-1.35);
-add(BX(.16,.14,.16),M.black,-2.0,.92,-1.35);
-add(BX(.1,.05,.07),M.air,-3.0,1.04,-1.35);
-add(BX(.1,.05,.07),M.air,-2.0,1.04,-1.35);
-
-const sensorLeds = [];
-const tcPositions = [-.95,-.35,.25,.85];
-tcPositions.forEach((x)=>{
-  cylY(.025,.22,M.steelBright,X_CH+x,AXIS_Y+.58,0,10);
-  cylY(.04,.04,M.steelDark,X_CH+x,AXIS_Y+.73,0,12);
-  cylY(.018,.35,M.copper,X_CH+x,AXIS_Y+.92,0,8);
-  const lm = ledMat(0x00ff88,0);
-  add(SP(.02,8,8),lm,X_CH+x,AXIS_Y+1.13,0);
-  sensorLeds.push(lm);
+/* ================= SENSORS ================= */
+const sensorMats=[];
+[-1.05,-.38,.28,.92].forEach((x,i)=>{
+  cylY(.025,.24,mat.bright,XC+x,Y+.62,0,10);
+  cylY(.04,.05,mat.steelDark,XC+x,Y+.79,0,12);
+  cylY(.018,.35,mat.copper,XC+x,Y+1.0,0,8);
+  const lm=led(0x00ff88,0); add(SP(.022,8,8),lm,XC+x,Y+1.22,0); sensorMats.push(lm);
+  label("T"+(i+1),XC+x,Y+1.55,0,.42);
 });
-
-[-.65,.65].forEach((x)=>{
-  cylY(.025,.2,M.steelBright,X_CH+x,AXIS_Y-.58,0,10);
-  add(BX(.07,.07,.07),M.panel,X_CH+x,AXIS_Y-.75,0);
-  const lm = ledMat(0x00aaff,0);
-  add(SP(.02,8,8),lm,X_CH+x,AXIS_Y-.9,0);
-  sensorLeds.push(lm);
+[-.68,.78].forEach((x,i)=>{
+  cylY(.025,.22,mat.bright,XC+x,Y-.62,0,10);
+  add(BX(.075,.075,.075),mat.panel,XC+x,Y-.79,0);
+  const lm=led(0x00aaff,0); add(SP(.022,8,8),lm,XC+x,Y-.94,0); sensorMats.push(lm);
+  label("P"+(i+1),XC+x,Y-.72,.46,.42);
 });
+const fd=led(0x2266ff,.35);
+add(CY(.035,.018,.22,14),mat.bright,XC-1.05,Y,.62,Math.PI/2,0,0);
+add(SP(.035,12,10),fd,XC-1.05,Y,.77);
+label("FLAME DETECTOR",XC-1.05,Y+1.55,.6,.52);
 
-const flameDetectorMat = ledMat(0x2255ff,.4);
-add(CY(.035,.018,.22,14),M.steelBright,X_CH-.9,AXIS_Y,.58,Math.PI/2,0,0);
-add(SP(.035,12,10),flameDetectorMat,X_CH-.9,AXIS_Y,.72);
+/* ================= CONTROL PANEL / DAQ ================= */
+const CPX=5.45;
+const panel=new THREE.Group(); panel.position.set(CPX,1.0,1.18); scene.add(panel);
+add(BX(1.25,1.15,.35),mat.panel,0,.22,0,0,0,0,panel);
+add(BX(.74,.25,.025),new THREE.MeshStandardMaterial({color:0x001d35,emissive:new THREE.Color(0x003866),emissiveIntensity:.8}),0,.55,.19,0,0,0,panel);
+const swMats=[];
+for(let i=0;i<6;i++){const sm=new THREE.MeshStandardMaterial({color:0x334455,metalness:.6,roughness:.4}); swMats.push(sm); add(BX(.11,.25,.055),sm,-.48+i*.19,.05,.2,0,0,0,panel)}
+add(CY(.11,.11,.06,32),new THREE.MeshStandardMaterial({color:0xff1b1b,emissive:new THREE.Color(0x880000),emissiveIntensity:.9}),.48,-.35,.2,0,0,0,panel);
+add(CY(.07,.07,.05,24),new THREE.MeshStandardMaterial({color:0x00cc44,emissive:new THREE.Color(0x006622),emissiveIntensity:.8}),.2,-.35,.2,0,0,0,panel);
 
-const CPX = 5.5;
+const daqMat=new THREE.MeshStandardMaterial({color:0x0d1822,metalness:.45,roughness:.55,emissive:new THREE.Color(0x000000),emissiveIntensity:0});
+add(BX(1.0,.65,.48),daqMat,CPX+1.4,.7,1.15);
+add(BX(.6,.22,.025),new THREE.MeshStandardMaterial({color:0x001a33,emissive:new THREE.Color(0x003a6a),emissiveIntensity:.8}),CPX+1.4,.84,1.41);
+const daqLED=[];
+for(let i=0;i<10;i++){const lm=led(0x00aaff,0); add(BX(.045,.045,.014),lm,CPX+1.02+i*.085,.52,1.41); daqLED.push(lm)}
 
-const panelG = new THREE.Group();
-panelG.position.set(CPX,1.05,1.15);
-scene.add(panelG);
+const alG=led(0x00ff88,.25), alY=led(0xffcc00,0), alR=led(0xff2244,0);
+cylY(.04,.6,mat.steelDark,CPX+.78,1.62,1.03,12);
+cylY(.075,.1,alG,CPX+.78,1.86,1.03,22);
+cylY(.075,.1,alY,CPX+.78,1.99,1.03,22);
+cylY(.075,.1,alR,CPX+.78,2.12,1.03,22);
+label("CONTROL PANEL",CPX,2.25,1.18,.8);
+label("DAQ SYSTEM",CPX+1.4,1.35,1.15,.7);
 
-add(BX(1.05,1.35,.35),M.panel,0,.35,0,0,0,0,panelG);
-add(BX(.58,.28,.02),new THREE.MeshStandardMaterial({color:0x001a33,emissive:new THREE.Color(0x004488),emissiveIntensity:.8}),0,.68,.19,0,0,0,panelG);
-
-const switchMats = [];
-for(let i=0;i<6;i++){
-  const sm = new THREE.MeshStandardMaterial({color:0x334455,metalness:.6,roughness:.4});
-  switchMats.push(sm);
-  add(BX(.1,.06,.04),sm,-.4+i*.16,.32,.2,0,0,0,panelG);
-}
-
-add(CY(.08,.08,.05,24),new THREE.MeshStandardMaterial({color:0xff0000,emissive:new THREE.Color(0x880000),emissiveIntensity:.8}),.35,-.2,.2,0,0,0,panelG);
-add(CY(.06,.06,.045,24),new THREE.MeshStandardMaterial({color:0x00cc44,emissive:new THREE.Color(0x006622),emissiveIntensity:.7}),.12,-.2,.2,0,0,0,panelG);
-
-const daqMat = new THREE.MeshStandardMaterial({color:0x0d1822,metalness:.45,roughness:.55,emissive:new THREE.Color(0x000000),emissiveIntensity:0});
-add(BX(1.05,.65,.5),daqMat,CPX+1.25,.75,1.1);
-add(BX(.62,.22,.02),new THREE.MeshStandardMaterial({color:0x001a33,emissive:new THREE.Color(0x003a6a),emissiveIntensity:.8}),CPX+1.25,.87,1.36);
-
-const daqLeds = [];
-for(let i=0;i<10;i++){
-  const lm = ledMat(0x00aaff,0);
-  add(BX(.045,.045,.012),lm,CPX+.86+i*.085,.58,1.36);
-  daqLeds.push(lm);
-}
-
-const alGreen = ledMat(0x00ff88,.2);
-const alYellow = ledMat(0xffcc00,0);
-const alRed = ledMat(0xff2244,0);
-cylY(.04,.6,M.steelDark,CPX+.65,1.8,1.0,12);
-cylY(.07,.1,alGreen,CPX+.65,1.95,1.0,20);
-cylY(.07,.1,alYellow,CPX+.65,2.08,1.0,20);
-cylY(.07,.1,alRed,CPX+.65,2.21,1.0,20);
-
-const wireMats = [];
+/* wires */
+const wireMats=[];
 [
-  [new THREE.Vector3(X_CH-.95,AXIS_Y+1.13,0),new THREE.Vector3(1.5,2.4,.8),new THREE.Vector3(CPX+1.25,.9,1.35),0x00aaff],
-  [new THREE.Vector3(X_CH-.35,AXIS_Y+1.13,0),new THREE.Vector3(1.7,2.3,.7),new THREE.Vector3(CPX+1.25,.85,1.35),0x00ff88],
-  [new THREE.Vector3(X_CH+.25,AXIS_Y+1.13,0),new THREE.Vector3(1.9,2.2,.6),new THREE.Vector3(CPX+1.25,.8,1.35),0xffaa00],
-  [new THREE.Vector3(X_CH+.85,AXIS_Y+1.13,0),new THREE.Vector3(2.1,2.1,.55),new THREE.Vector3(CPX+1.25,.75,1.35),0xff4444],
-  [new THREE.Vector3(X_CH-.9,AXIS_Y,.72),new THREE.Vector3(2,1.7,1),new THREE.Vector3(CPX+1.25,.7,1.35),0x2244ff]
-].forEach(route=>{
-  const col = route[3];
-  const mat = new THREE.MeshStandardMaterial({color:col,emissive:new THREE.Color(col),emissiveIntensity:0});
-  tube([route[0],route[1],route[2]],mat,.008,80);
-  wireMats.push(mat);
-});
+ [new THREE.Vector3(XC-1.05,Y+1.22,0),new THREE.Vector3(1.3,2.35,.8),new THREE.Vector3(CPX+1.4,.92,1.4),0x00aaff],
+ [new THREE.Vector3(XC-.38,Y+1.22,0),new THREE.Vector3(1.7,2.25,.75),new THREE.Vector3(CPX+1.4,.86,1.4),0x00ff88],
+ [new THREE.Vector3(XC+.28,Y+1.22,0),new THREE.Vector3(2.1,2.15,.7),new THREE.Vector3(CPX+1.4,.80,1.4),0xffaa00],
+ [new THREE.Vector3(XC+.92,Y+1.22,0),new THREE.Vector3(2.45,2.05,.6),new THREE.Vector3(CPX+1.4,.74,1.4),0xff4444],
+ [new THREE.Vector3(XC-1.05,Y,.77),new THREE.Vector3(1.9,1.7,1.0),new THREE.Vector3(CPX+1.4,.68,1.4),0x2266ff]
+].forEach(r=>{const m=new THREE.MeshStandardMaterial({color:r[3],emissive:new THREE.Color(r[3]),emissiveIntensity:0}); tube([r[0],r[1],r[2]],m,.008,90); wireMats.push(m)});
 
-label("BLOWER",X_BLOWER,2.15,0);
-label("PREHEATER",X_PRE,2.15,0);
-label("TRANSPARENT COMBUSTION CHAMBER",X_CH,2.25,0,1.35);
-label("NOZZLE",X_NOZ,2.0,0);
-label("AIR",-6.8,1.9,-1.45,.75);
-label("H₂",-5.75,1.9,-1.45,.75);
-label("KEROSENE",-4.7,1.9,-1.45,.85);
-label("DAQ / CONTROL",CPX+.6,2.25,1.15,1);
+/* ================= LABELS ================= */
+label("BLOWER",XB,2.2,0);
+label("PREHEATER",XP,2.2,0);
+label("COMBUSTION CHAMBER",XC,2.35,0,1.2);
+label("NOZZLE",XN,2.05,0);
 
-const airCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(X_BLOWER,AXIS_Y,0),
-  new THREE.Vector3(X_PRE,AXIS_Y,0),
-  new THREE.Vector3(X_CH,AXIS_Y,0),
-  new THREE.Vector3(X_NOZ+.8,AXIS_Y,0)
-]);
+/* ================= FLOW PARTICLES ================= */
+const airCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(XB,Y,0),new THREE.Vector3(XP,Y,0),new THREE.Vector3(XC,Y,0),new THREE.Vector3(XN+.8,Y,0)]);
+const h2Curve=new THREE.CatmullRomCurve3([new THREE.Vector3(-5.85,1.65,-1.45),new THREE.Vector3(-3.35,1.05,-1.35),new THREE.Vector3(-1.35,1.05,-1.15),new THREE.Vector3(XC-.55,Y+.58,-.25)]);
+const kerCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-4.8,1.62,-1.45),new THREE.Vector3(-2.45,.92,-1.35),new THREE.Vector3(-1.35,1.05,-1.15),new THREE.Vector3(XC-.25,Y+.58,.25)]);
+const exCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(XN+.7,Y,0),new THREE.Vector3(XN+1.8,Y+.15,.1),new THREE.Vector3(XN+3.3,Y+.45,.32),new THREE.Vector3(XN+5.3,Y+1.0,.75)]);
 
-const h2Curve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-5.75,1.65,-1.45),
-  new THREE.Vector3(-3.25,1.05,-1.35),
-  new THREE.Vector3(-1.35,1.05,-1.15),
-  new THREE.Vector3(X_CH-.55,AXIS_Y+.58,-.25)
-]);
-
-const keroCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-4.7,1.6,-1.45),
-  new THREE.Vector3(-2.35,.9,-1.35),
-  new THREE.Vector3(-1.35,1.05,-1.15),
-  new THREE.Vector3(X_CH-.28,AXIS_Y+.58,.25)
-]);
-
-const exhaustCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(X_NOZ+.75,AXIS_Y,0),
-  new THREE.Vector3(X_NOZ+1.8,AXIS_Y+.15,.1),
-  new THREE.Vector3(X_NOZ+3.3,AXIS_Y+.45,.35),
-  new THREE.Vector3(X_NOZ+5.2,AXIS_Y+1.0,.7)
-]);
-
-function makeFlow(count,color,size){
-  const geo = new THREE.BufferGeometry();
-  const pos = new Float32Array(count*3);
-  geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
-  const mat = new THREE.PointsMaterial({color,size,transparent:true,opacity:.82,sizeAttenuation:true,depthWrite:false});
-  const ps = new THREE.Points(geo,mat);
-  ps.visible = false;
-  scene.add(ps);
-  return {ps,geo,pos,count};
+function particles(n,color,size){
+  const geo=new THREE.BufferGeometry(); const pos=new Float32Array(n*3); geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
+  const ps=new THREE.Points(geo,new THREE.PointsMaterial({color,size,transparent:true,opacity:.82,sizeAttenuation:true,depthWrite:false}));
+  ps.visible=false; scene.add(ps); return {ps,geo,pos,n};
+}
+const airPS=particles(170,0x44aaff,.038), h2PS=particles(85,0xff5555,.034), kerPS=particles(85,0xffcc00,.034), exPS=particles(130,0xffaa55,.052);
+function updatePS(o,curve,on,speed,t){
+  o.ps.visible=on; if(!on)return;
+  for(let i=0;i<o.n;i++){const u=(i/o.n+t*speed)%1; const p=curve.getPoint(u); o.pos[i*3]=p.x+(Math.random()-.5)*.035; o.pos[i*3+1]=p.y+(Math.random()-.5)*.035; o.pos[i*3+2]=p.z+(Math.random()-.5)*.035}
+  o.geo.attributes.position.needsUpdate=true;
 }
 
-const airFlow = makeFlow(160,0x44aaff,.04);
-const h2Flow = makeFlow(80,0xff5555,.036);
-const keroFlow = makeFlow(80,0xffcc00,.036);
-const exhaustFlow = makeFlow(120,0xffaa55,.055);
+/* ================= REAL FLAME VOLUME ================= */
+const flameGroup=new THREE.Group(); chamber.add(flameGroup);
+function flameLayer(radius,length,color,opacity){
+  const geo=new THREE.CylinderGeometry(radius*.1,radius,length,64,24,true);
+  const m=new THREE.MeshBasicMaterial({color,transparent:true,opacity,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false});
+  const mesh=new THREE.Mesh(geo,m); mesh.rotation.z=-Math.PI/2; return mesh;
+}
+const flameOuter=flameLayer(.36,1.55,0xff4a00,.24);
+const flameMid=flameLayer(.25,1.35,0xffaa00,.4);
+const flameInner=flameLayer(.14,1.18,0xffffdd,.6);
+const flameCore=flameLayer(.08,1.05,0x66bbff,.7);
+[flameOuter,flameMid,flameInner,flameCore].forEach((f,i)=>{f.position.x=-.48+i*.03; flameGroup.add(f)});
+const wisps=[];
+for(let i=0;i<14;i++){
+  const w=flameLayer(.04+Math.random()*.08,.45+Math.random()*.55,0xff7722,.15);
+  w.position.set(-.85+Math.random()*1.05,(Math.random()-.5)*.15,(Math.random()-.5)*.16);
+  w.scale.setScalar(.7+Math.random()*.6); flameGroup.add(w);
+  wisps.push({mesh:w,phase:Math.random()*Math.PI*2,by:w.position.y,bz:w.position.z});
+}
+flameGroup.visible=false;
 
-function updateFlow(system,curve,on,speed,t){
-  system.ps.visible = on;
-  if(!on) return;
-  for(let i=0;i<system.count;i++){
-    const u = (i/system.count + t*speed) % 1;
-    const p = curve.getPoint(u);
-    system.pos[i*3] = p.x + (Math.random()-.5)*.035;
-    system.pos[i*3+1] = p.y + (Math.random()-.5)*.035;
-    system.pos[i*3+2] = p.z + (Math.random()-.5)*.035;
-  }
-  system.geo.attributes.position.needsUpdate = true;
+/* ================= SOUND ================= */
+let audioCtx, blowerGain, burnGain, blowerOsc, noise;
+function enableSound(){
+  if(audioCtx)return;
+  audioCtx=new AudioContext();
+  blowerGain=audioCtx.createGain(); blowerGain.gain.value=0; blowerGain.connect(audioCtx.destination);
+  blowerOsc=audioCtx.createOscillator(); blowerOsc.type="sawtooth"; blowerOsc.frequency.value=72;
+  const bf=audioCtx.createBiquadFilter(); bf.type="lowpass"; bf.frequency.value=520;
+  blowerOsc.connect(bf); bf.connect(blowerGain); blowerOsc.start();
+
+  burnGain=audioCtx.createGain(); burnGain.gain.value=0; burnGain.connect(audioCtx.destination);
+  const buffer=audioCtx.createBuffer(1,audioCtx.sampleRate*2,audioCtx.sampleRate);
+  const d=buffer.getChannelData(0); for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  noise=audioCtx.createBufferSource(); noise.buffer=buffer; noise.loop=true;
+  const nf=audioCtx.createBiquadFilter(); nf.type="bandpass"; nf.frequency.value=450; nf.Q.value=.9;
+  noise.connect(nf); nf.connect(burnGain); noise.start();
+  document.getElementById("sound").textContent="🔊 SOUND ON";
+}
+function setBlowerAudio(on){if(audioCtx)blowerGain.gain.linearRampToValueAtTime(on?.23:0,audioCtx.currentTime+.8)}
+function setBurnAudio(on){if(audioCtx)burnGain.gain.linearRampToValueAtTime(on?.48:0,audioCtx.currentTime+.8)}
+function sparkAudio(){
+  if(!audioCtx)return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type="sawtooth"; o.frequency.setValueAtTime(540,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(90,audioCtx.currentTime+.35);
+  g.gain.setValueAtTime(.65,audioCtx.currentTime); g.gain.linearRampToValueAtTime(0,audioCtx.currentTime+.35);
+  o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.35);
 }
 
-/* REAL FLAME VOLUME */
-const flameGroup = new THREE.Group();
-chG.add(flameGroup);
-
-function createFlameLayer(radius,length,color,opacity){
-  const geo = new THREE.CylinderGeometry(
-    radius * 0.1,
-    radius,
-    length,
-    48,
-    24,
-    true
-  );
-
-  const mat = new THREE.MeshBasicMaterial({
-    color,
-    transparent:true,
-    opacity,
-    side:THREE.DoubleSide,
-    blending:THREE.AdditiveBlending,
-    depthWrite:false
-  });
-
-  const flame = new THREE.Mesh(geo,mat);
-  flame.rotation.z = -Math.PI / 2;
-
-  return flame;
-}
-
-const outerFlame = createFlameLayer(0.34,1.55,0xff4a00,0.22);
-const midFlame   = createFlameLayer(0.24,1.35,0xffaa00,0.38);
-const innerFlame = createFlameLayer(0.14,1.18,0xffffdd,0.58);
-const h2Core     = createFlameLayer(0.08,1.05,0x66bbff,0.68);
-
-outerFlame.position.x = -0.45;
-midFlame.position.x   = -0.42;
-innerFlame.position.x = -0.40;
-h2Core.position.x     = -0.38;
-
-outerFlame.position.y = 0;
-midFlame.position.y   = 0;
-innerFlame.position.y = 0;
-h2Core.position.y     = 0;
-
-flameGroup.add(outerFlame);
-flameGroup.add(midFlame);
-flameGroup.add(innerFlame);
-flameGroup.add(h2Core);
-
-flameGroup.visible = false;
-
-const flameNoise = [];
-for(let i=0;i<10;i++){
-  const layer = createFlameLayer(
-    0.04 + Math.random()*0.08,
-    0.45 + Math.random()*0.55,
-    0xff7722,
-    0.18
-  );
-  layer.position.x = -0.8 + Math.random()*0.9;
-  layer.position.y = (Math.random()-.5)*0.14;
-  layer.position.z = (Math.random()-.5)*0.14;
-  layer.scale.setScalar(0.7 + Math.random()*0.5);
-  flameGroup.add(layer);
-  flameNoise.push({
-    mesh: layer,
-    phase: Math.random()*Math.PI*2,
-    baseY: layer.position.y,
-    baseZ: layer.position.z
-  });
-}
-
-const SYS = {
-  blower:false,
-  preheater:false,
-  h2v:false,
-  kero:false,
-  ign:false,
-  run:false,
-  estop:false,
-  h2r:20,
-  seq:false
-};
-
-const S = {
-  t1:22,t2:22,t3:22,t4:22,
-  p1:1.013,p2:1.013,
-  af:0,hf:0,kf:0,
-  eff:0,phi:0,
-  flame:false,
-  alarm:"NORMAL"
-};
-
-const lerp = (a,b,t)=>a+(b-a)*t;
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
-
-function stepClass(i,s){
-  const e = document.getElementById("sq"+(i+1));
-  if(e) e.className = "sq " + (s || "");
-}
-
+/* ================= STATE UI ================= */
+const S={t1:22,t2:22,t3:22,t4:22,p1:1.013,p2:1.013,air:0,h2f:0,kf:0,eff:0,alarm:"NORMAL"};
+const lerp=(a,b,t)=>a+(b-a)*t;
 function updateSensors(){
-  if(SYS.estop){
-    S.t1=lerp(S.t1,22,.02);
-    S.t2=lerp(S.t2,22,.015);
-    S.t3=lerp(S.t3,22,.01);
-    S.t4=lerp(S.t4,22,.01);
-    S.p1=lerp(S.p1,1.013,.03);
-    S.p2=lerp(S.p2,1.013,.03);
-    S.af=lerp(S.af,0,.05);
-    S.hf=lerp(S.hf,0,.05);
-    S.kf=lerp(S.kf,0,.05);
-    S.eff=lerp(S.eff,0,.035);
-    S.phi=0;
-    S.flame=false;
-    S.alarm="E-STOP";
-    return;
-  }
-
-  if(SYS.blower){
-    S.t1=lerp(S.t1,43+Math.random()*4,.015);
-    S.af=lerp(S.af,32+Math.random()*2.5,.025);
-    S.p1=lerp(S.p1,1.24+Math.random()*.03,.012);
-  }
-
-  if(SYS.preheater){
-    S.t2=lerp(S.t2,430+Math.random()*28,.012);
-  }
-
-  if(SYS.h2v){
-    const h = (S.af * SYS.h2r / 100) * .12;
-    S.hf=lerp(S.hf,h+Math.random()*.03,.025);
-  }
-
-  if(SYS.kero){
-    const k = S.af * .058 * (1-SYS.h2r/100);
-    S.kf=lerp(S.kf,k+Math.random()*.02,.025);
-  }
-
-  if(SYS.run){
-    const h2Heat = SYS.h2r * 4.2;
-    S.t3=lerp(S.t3,1180+h2Heat+Math.random()*60,.007);
-    S.t4=lerp(S.t4,820+h2Heat*.35+Math.random()*35,.007);
-    S.p2=lerp(S.p2,1.26+Math.random()*.03,.012);
-    S.p1=lerp(S.p1,1.92+Math.random()*.05,.012);
-    S.eff=lerp(S.eff,92.8+SYS.h2r*.08+Math.random()*1.2,.01);
-    S.phi=+(1.03+(SYS.h2r/220)+Math.random()*.018).toFixed(3);
-    S.flame=true;
-    S.alarm = SYS.h2r >= 45 ? "H₂ HIGH" : "NORMAL";
-  } else {
-    S.t3=lerp(S.t3,22,.006);
-    S.t4=lerp(S.t4,22,.006);
-    S.eff=lerp(S.eff,0,.018);
-    S.flame=false;
-  }
+  if(step===0){S.t1=lerp(S.t1,22,.03);S.t2=lerp(S.t2,22,.02);S.t3=lerp(S.t3,22,.02);S.t4=lerp(S.t4,22,.02);S.p1=lerp(S.p1,1.013,.03);S.p2=lerp(S.p2,1.013,.03);S.air=lerp(S.air,0,.05);S.h2f=lerp(S.h2f,0,.05);S.kf=lerp(S.kf,0,.05);S.eff=lerp(S.eff,0,.04); return}
+  if(step>=1){S.t1=lerp(S.t1,45,.02);S.air=lerp(S.air,33.1,.03);S.p1=lerp(S.p1,1.603,.02)}
+  if(step>=2)S.t2=lerp(S.t2,444,.018);
+  if(step>=3)S.h2f=lerp(S.h2f,.812,.035);
+  if(step>=4)S.kf=lerp(S.kf,1.55,.035);
+  if(step>=5){S.t3=lerp(S.t3,1180+h2*4,.015);S.t4=lerp(S.t4,844+h2*.6,.015);S.p2=lerp(S.p2,1.275,.02);S.eff=lerp(S.eff,93.8+h2*.035,.018)}
+  S.alarm=(h2>=45&&step>=6)?"H₂ HIGH":"NORMAL";
 }
-
-function fmt(v,d=1){ return v.toFixed(d); }
-
-function updateDashboard(){
-  document.getElementById("vt1").textContent = SYS.blower ? fmt(S.t1,1)+" °C" : "-- °C";
-  document.getElementById("vt2").textContent = SYS.preheater ? fmt(S.t2,0)+" °C" : "-- °C";
-  document.getElementById("vt3").textContent = SYS.run ? fmt(S.t3,0)+" °C" : "-- °C";
-  document.getElementById("vt4").textContent = SYS.run ? fmt(S.t4,0)+" °C" : "-- °C";
-
-  document.getElementById("vp1").textContent = SYS.blower ? fmt(S.p1,3)+" bar" : "-- bar";
-  document.getElementById("vp2").textContent = SYS.run ? fmt(S.p2,3)+" bar" : "-- bar";
-
-  document.getElementById("vaf").textContent = SYS.blower ? fmt(S.af,1)+" g/s" : "-- g/s";
-  document.getElementById("vhf").textContent = SYS.h2v ? fmt(S.hf,3)+" g/s" : "-- g/s";
-  document.getElementById("vkf").textContent = SYS.kero ? fmt(S.kf,3)+" g/s" : "-- g/s";
-
-  document.getElementById("veff").textContent = SYS.run ? fmt(S.eff,1)+" %" : "-- %";
-  document.getElementById("vphi").textContent = SYS.run ? S.phi : "--";
-
-  const flame = document.getElementById("vflame");
-  flame.textContent = S.flame ? "ACTIVE" : "OFF";
-  flame.className = "dv " + (S.flame ? "ok" : "");
-
-  const alarm = document.getElementById("valarm");
-  alarm.textContent = S.alarm;
-  alarm.className = "dv " + (SYS.estop ? "al" : (S.alarm==="H₂ HIGH" ? "w" : "ok"));
-
-  const dot = document.getElementById("sdot");
-  const txt = document.getElementById("stxt");
-
-  if(SYS.estop){ dot.className="sd es"; txt.textContent="E-STOP"; }
-  else if(SYS.run){ dot.className="sd run"; txt.textContent="OPERATIONAL"; }
-  else if(SYS.ign){ dot.className="sd ign"; txt.textContent="IGNITING"; }
-  else if(SYS.blower){ dot.className="sd st"; txt.textContent="STARTING UP"; }
-  else{ dot.className="sd"; txt.textContent="STANDBY"; }
+function ui(){
+  const status=document.getElementById("status");
+  status.textContent=step>=6?"OPERATIONAL":step>=5?"IGNITING":step>0?"STARTING":"STANDBY";
+  status.className=step>=6?"ok":step>=5?"warn":"ok";
+  t1.textContent=step>=1?S.t1.toFixed(1)+" °C":"-- °C";
+  t2.textContent=step>=2?S.t2.toFixed(0)+" °C":"-- °C";
+  t3.textContent=step>=5?S.t3.toFixed(0)+" °C":"-- °C";
+  t4.textContent=step>=6?S.t4.toFixed(0)+" °C":"-- °C";
+  p1.textContent=step>=1?S.p1.toFixed(3)+" bar":"-- bar";
+  p2.textContent=step>=6?S.p2.toFixed(3)+" bar":"-- bar";
+  air.textContent=step>=1?S.air.toFixed(1)+" g/s":"-- g/s";
+  h2flow.textContent=step>=3?S.h2f.toFixed(3)+" g/s":"-- g/s";
+  kflow.textContent=step>=4?S.kf.toFixed(3)+" g/s":"-- g/s";
+  eff.textContent=step>=6?S.eff.toFixed(1)+" %":"-- %";
+  flameState.textContent=step>=5?"ACTIVE":"OFF"; flameState.className=step>=5?"ok":"";
+  alarm.textContent=S.alarm; alarm.className=S.alarm==="NORMAL"?"ok":"warn";
+  const names=["Blower Motor","Preheater Active","H₂ Solenoid Open","Kerosene Pump","Ignition Sequence","Full Operation"];
+  for(let i=1;i<=6;i++){const e=document.getElementById("s"+i); e.className="item "+(i<step?"done":i===step?"run":""); e.textContent=(i<=step?"● ":"○ ")+names[i-1]+(i<step?"  DONE":i===step?"  RUNNING":"")}
 }
+window.startNext=function(){if(step<6){step++; if(step===1)setBlowerAudio(true); if(step===5)sparkAudio(); if(step===6)setBurnAudio(true)}}
+window.autoIgnition=async function(){if(autoBusy)return; resetSystem(); autoBusy=true; for(let i=0;i<6;i++){await new Promise(r=>setTimeout(r,750)); startNext()} autoBusy=false}
+window.eStop=function(){step=0; setBlowerAudio(false); setBurnAudio(false); ui(); status.textContent="E-STOP"; status.className="bad"}
+window.resetSystem=function(){step=0; setBlowerAudio(false); setBurnAudio(false)}
+window.setBlend=function(v){h2=Number(v); blendText.textContent=h2+" %"}
 
-window.startNext = async function(){
-  if(SYS.seq || SYS.estop) return;
-
-  if(!SYS.blower){
-    SYS.seq=true; stepClass(0,"act");
-    await sleep(700);
-    SYS.blower=true;
-    stepClass(0,"done");
-    document.getElementById("bstart").classList.add("on");
-    SYS.seq=false;
-    return;
-  }
-
-  if(!SYS.preheater){
-    SYS.seq=true; stepClass(1,"act");
-    await sleep(900);
-    SYS.preheater=true;
-    stepClass(1,"done");
-    SYS.seq=false;
-    return;
-  }
-
-  if(!SYS.h2v){
-    SYS.seq=true; stepClass(2,"act");
-    await sleep(700);
-    SYS.h2v=true;
-    stepClass(2,"done");
-    SYS.seq=false;
-    return;
-  }
-
-  if(!SYS.kero){
-    SYS.seq=true; stepClass(3,"act");
-    await sleep(700);
-    SYS.kero=true;
-    stepClass(3,"done");
-    SYS.seq=false;
-  }
-};
-
-window.autoIgn = async function(){
-  if(SYS.seq || SYS.estop) return;
-  SYS.seq=true;
-
-  if(!SYS.blower){ stepClass(0,"act"); await sleep(700); SYS.blower=true; stepClass(0,"done"); }
-  if(!SYS.preheater){ stepClass(1,"act"); await sleep(900); SYS.preheater=true; stepClass(1,"done"); }
-  if(!SYS.h2v){ stepClass(2,"act"); await sleep(650); SYS.h2v=true; stepClass(2,"done"); }
-  if(!SYS.kero){ stepClass(3,"act"); await sleep(650); SYS.kero=true; stepClass(3,"done"); }
-
-  stepClass(4,"act");
-  SYS.ign=true;
-  await sleep(1700);
-  SYS.ign=false;
-  SYS.run=true;
-  stepClass(4,"done");
-  stepClass(5,"done");
-  document.getElementById("bign").classList.add("on");
-  SYS.seq=false;
-};
-
-window.eStop = function(){
-  SYS.blower=false;
-  SYS.preheater=false;
-  SYS.h2v=false;
-  SYS.kero=false;
-  SYS.ign=false;
-  SYS.run=false;
-  SYS.seq=false;
-  SYS.estop=true;
-
-  for(let i=0;i<6;i++) stepClass(i,"");
-  document.getElementById("bstart").classList.remove("on");
-  document.getElementById("bign").classList.remove("on");
-};
-
-window.resetSys = function(){
-  SYS.blower=false;
-  SYS.preheater=false;
-  SYS.h2v=false;
-  SYS.kero=false;
-  SYS.ign=false;
-  SYS.run=false;
-  SYS.seq=false;
-  SYS.estop=false;
-
-  Object.assign(S,{
-    t1:22,t2:22,t3:22,t4:22,
-    p1:1.013,p2:1.013,
-    af:0,hf:0,kf:0,
-    eff:0,phi:0,
-    flame:false,
-    alarm:"NORMAL"
-  });
-
-  flameGroup.visible = false;
-
-  for(let i=0;i<6;i++) stepClass(i,"");
-  document.getElementById("bstart").classList.remove("on");
-  document.getElementById("bign").classList.remove("on");
-};
-
-window.setH2 = function(v){
-  SYS.h2r = parseInt(v);
-  document.getElementById("h2v").textContent = v + " %";
-};
-
-const clock = new THREE.Clock();
-
+/* ================= LOOP ================= */
+const clock=new THREE.Clock();
 function animate(){
   requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
+  const t=clock.getElapsedTime();
 
-  if(SYS.blower && !SYS.estop){
-    fanG.rotation.x += .12;
-    fanG.rotation.z += .09;
-  }
+  if(step>=1)fan.rotation.x+=.14, fan.rotation.z+=.09;
 
-  coilMats.forEach((cm,i)=>{
-    if(SYS.preheater && !SYS.estop){
-      cm.color.setHex(0xff7722);
-      cm.emissive.setHex(0xff4400);
-      cm.emissiveIntensity = .55 + Math.sin(t*3+i)*.25;
-      preheaterLight.intensity = .5 + Math.sin(t*3)*.12;
-    } else {
-      cm.emissiveIntensity = Math.max(0,cm.emissiveIntensity-.02);
-      if(cm.emissiveIntensity < .02){
-        cm.color.setHex(0x553322);
-        cm.emissive.setHex(0x000000);
-      }
-      preheaterLight.intensity = Math.max(0,preheaterLight.intensity-.02);
-    }
+  coils.forEach((c,i)=>{
+    if(step>=2){c.color.setHex(0xff7722);c.emissive.setHex(0xff4400);c.emissiveIntensity=.55+Math.sin(t*3+i)*.22;preLight.intensity=.5+Math.sin(t*3)*.1}
+    else{c.emissiveIntensity=Math.max(0,c.emissiveIntensity-.02);preLight.intensity=Math.max(0,preLight.intensity-.02)}
   });
 
-  updateFlow(airFlow,airCurve,SYS.blower&&!SYS.estop,.12,t);
-  updateFlow(h2Flow,h2Curve,SYS.h2v&&!SYS.estop,.18,t);
-  updateFlow(keroFlow,keroCurve,SYS.kero&&!SYS.estop,.16,t);
-  updateFlow(exhaustFlow,exhaustCurve,SYS.run&&!SYS.estop,.2,t);
+  updatePS(airPS,airCurve,step>=1,.12,t);
+  updatePS(h2PS,h2Curve,step>=3,.18,t);
+  updatePS(kerPS,kerCurve,step>=4,.16,t);
+  updatePS(exPS,exCurve,step>=6,.2,t);
 
   updateSensors();
 
-  const flameOn = (SYS.ign || SYS.run) && !SYS.estop;
-  flameGroup.visible = flameOn;
-
+  const flameOn=step>=5;
+  flameGroup.visible=flameOn;
   if(flameOn){
-    const mainPulse = 1 + Math.sin(t*14)*0.045;
-    const fastPulse = 1 + Math.sin(t*22)*0.06;
-
-    outerFlame.scale.set(1, mainPulse, mainPulse);
-    midFlame.scale.set(1, fastPulse, fastPulse);
-    innerFlame.scale.set(1, 1 + Math.sin(t*28)*0.07, 1 + Math.sin(t*28)*0.07);
-    h2Core.scale.set(1, 1 + Math.sin(t*34)*0.08, 1 + Math.sin(t*34)*0.08);
-
-    outerFlame.rotation.x = Math.sin(t*5)*0.05;
-    midFlame.rotation.x = Math.sin(t*7)*0.04;
-    innerFlame.rotation.x = Math.sin(t*9)*0.03;
-    h2Core.rotation.x = Math.sin(t*11)*0.035;
-
-    flameNoise.forEach((f,i)=>{
-      f.mesh.position.y = f.baseY + Math.sin(t*5+f.phase)*0.06;
-      f.mesh.position.z = f.baseZ + Math.cos(t*6+f.phase)*0.05;
-      f.mesh.scale.y = 1 + Math.sin(t*12+f.phase)*0.25;
-      f.mesh.material.opacity = 0.12 + Math.sin(t*10+f.phase)*0.06;
-    });
-
-    if(S.t3 < 1050){
-      h2Core.material.color.set(0xffffff);
-      innerFlame.material.color.set(0xffddaa);
-      midFlame.material.color.set(0xffaa00);
-      outerFlame.material.color.set(0xff4400);
-      flameNoise.forEach(f=>f.mesh.material.color.set(0xff7722));
-      flameLight.color.set(0xff6600);
-      combustionGlow.color.set(0xff6600);
-    } else if(S.t3 < 1250){
-      h2Core.material.color.set(0xddeeff);
-      innerFlame.material.color.set(0xffffff);
-      midFlame.material.color.set(0xffcc44);
-      outerFlame.material.color.set(0xff6600);
-      flameNoise.forEach(f=>f.mesh.material.color.set(0xff8844));
-      flameLight.color.set(0xff8844);
-      combustionGlow.color.set(0xff8844);
-    } else {
-      h2Core.material.color.set(0x66bbff);
-      innerFlame.material.color.set(0xaaddff);
-      midFlame.material.color.set(0xaa88ff);
-      outerFlame.material.color.set(0x5533ff);
-      flameNoise.forEach(f=>f.mesh.material.color.set(0x7744ff));
-      flameLight.color.set(0x6699ff);
-      combustionGlow.color.set(0x6688ff);
+    const p=1+Math.sin(t*14)*.045;
+    flameOuter.scale.set(1,p,p);
+    flameMid.scale.set(1,1+Math.sin(t*22)*.06,1+Math.sin(t*22)*.06);
+    flameInner.scale.set(1,1+Math.sin(t*28)*.07,1+Math.sin(t*28)*.07);
+    flameCore.scale.set(1,1+Math.sin(t*34)*.08,1+Math.sin(t*34)*.08);
+    flameOuter.rotation.x=Math.sin(t*5)*.05;
+    flameMid.rotation.x=Math.sin(t*7)*.04;
+    flameInner.rotation.x=Math.sin(t*9)*.03;
+    flameCore.rotation.x=Math.sin(t*11)*.035;
+    wisps.forEach(w=>{w.mesh.position.y=w.by+Math.sin(t*5+w.phase)*.06;w.mesh.position.z=w.bz+Math.cos(t*6+w.phase)*.05;w.mesh.scale.y=1+Math.sin(t*12+w.phase)*.25});
+    if(h2<15){
+      flameCore.material.color.set(0xffffff);flameInner.material.color.set(0xffddaa);flameMid.material.color.set(0xffaa00);flameOuter.material.color.set(0xff4400);wisps.forEach(w=>w.mesh.material.color.set(0xff7722));flameLight.color.set(0xff6600);
+    }else if(h2<40){
+      flameCore.material.color.set(0xddeeff);flameInner.material.color.set(0xffffff);flameMid.material.color.set(0xffcc44);flameOuter.material.color.set(0xff6600);wisps.forEach(w=>w.mesh.material.color.set(0xff8844));flameLight.color.set(0xff8844);
+    }else{
+      flameCore.material.color.set(0x66bbff);flameInner.material.color.set(0xaaddff);flameMid.material.color.set(0xaa88ff);flameOuter.material.color.set(0x5533ff);wisps.forEach(w=>w.mesh.material.color.set(0x7744ff));flameLight.color.set(0x6699ff);
     }
+    flameLight.intensity=step>=6?4.6+Math.sin(t*12)*.8:2+Math.sin(t*16)*.7;
+  }else flameLight.intensity=Math.max(0,flameLight.intensity-.08);
 
-    flameLight.intensity = SYS.run ? 4.6 + Math.sin(t*12)*0.8 : 2.0 + Math.sin(t*16)*0.7;
-    combustionGlow.intensity = SYS.run ? 5.2 + Math.sin(t*15)*0.8 : 2.2 + Math.sin(t*18)*0.5;
+  zoneP.opacity=flameOn?.35+Math.sin(t*6)*.08:0; zoneP.emissiveIntensity=flameOn?.28:0;
+  zoneS.opacity=step>=6?.22+Math.sin(t*5)*.06:0; zoneS.emissiveIntensity=step>=6?.18:0;
+  zoneD.opacity=step>=6?.12:0; zoneD.emissiveIntensity=step>=6?.1:0;
 
-    zoneMats.primary.opacity = .35 + Math.sin(t*6)*.1;
-    zoneMats.primary.emissiveIntensity = .3 + Math.sin(t*5)*.12;
+  sensorMats.forEach((m,i)=>m.emissiveIntensity=step>=1?.35+Math.sin(t*4+i)*.35:0);
+  daqLED.forEach((m,i)=>m.emissiveIntensity=step>=1?.35+Math.sin(t*5+i*.6)*.35:0);
+  wireMats.forEach((m,i)=>m.emissiveIntensity=step>=6?.25+Math.sin(t*4+i)*.22:0);
+  swMats.forEach((m,i)=>m.color.setHex(step>i?0x00aa55:0x334455));
+  daqMat.emissive.setHex(step>=6?0x003322:0x000000); daqMat.emissiveIntensity=step>=6?.45+Math.sin(t*3)*.12:0;
+  alG.emissiveIntensity=step>=6&&h2<45?1.1:.25; alY.emissiveIntensity=step>=6&&h2>=45?1.2+Math.sin(t*5)*.4:0; alR.emissiveIntensity=0;
 
-    zoneMats.secondary.opacity = SYS.run ? .24 + Math.sin(t*5)*.08 : .08;
-    zoneMats.secondary.emissiveIntensity = SYS.run ? .2 + Math.sin(t*4)*.08 : .05;
-
-    zoneMats.dilution.opacity = SYS.run ? .14 + Math.sin(t*3)*.05 : 0;
-    zoneMats.dilution.emissiveIntensity = SYS.run ? .1 : 0;
-  } else {
-    flameLight.intensity = Math.max(0,flameLight.intensity-.08);
-    combustionGlow.intensity = Math.max(0,combustionGlow.intensity-.08);
-
-    Object.values(zoneMats).forEach(m=>{
-      m.opacity = Math.max(0,m.opacity-.02);
-      m.emissiveIntensity = Math.max(0,m.emissiveIntensity-.02);
-    });
-  }
-
-  sensorLeds.forEach((lm,i)=>{
-    lm.emissiveIntensity = SYS.blower && !SYS.estop ? .4 + Math.sin(t*4+i)*.4 : 0;
-  });
-
-  daqLeds.forEach((lm,i)=>{
-    lm.emissiveIntensity = SYS.blower && !SYS.estop ? .35 + Math.sin(t*5+i*.6)*.35 : 0;
-  });
-
-  wireMats.forEach((wm,i)=>{
-    wm.emissiveIntensity = SYS.run && !SYS.estop ? .25 + Math.sin(t*4+i)*.22 : 0;
-  });
-
-  switchMats.forEach((sm,i)=>{
-    const active =
-      (SYS.blower && i<1) ||
-      (SYS.preheater && i<2) ||
-      (SYS.h2v && i<3) ||
-      (SYS.kero && i<4) ||
-      (SYS.ign && i<5) ||
-      (SYS.run && i<6);
-
-    sm.color.setHex(active ? 0x00aa55 : 0x334455);
-  });
-
-  if(SYS.estop){
-    alGreen.emissiveIntensity=0;
-    alYellow.emissiveIntensity=0;
-    alRed.emissiveIntensity=1.2+Math.sin(t*8)*.7;
-  } else if(SYS.ign){
-    alGreen.emissiveIntensity=.4;
-    alYellow.emissiveIntensity=1+Math.sin(t*9)*.5;
-    alRed.emissiveIntensity=0;
-  } else if(SYS.run && SYS.h2r>=45){
-    alGreen.emissiveIntensity=.4;
-    alYellow.emissiveIntensity=1.2+Math.sin(t*5)*.4;
-    alRed.emissiveIntensity=0;
-  } else if(SYS.run){
-    alGreen.emissiveIntensity=1.1;
-    alYellow.emissiveIntensity=0;
-    alRed.emissiveIntensity=0;
-  } else {
-    alGreen.emissiveIntensity=.2;
-    alYellow.emissiveIntensity=0;
-    alRed.emissiveIntensity=0;
-  }
-
-  daqMat.emissive.setHex(SYS.run ? 0x003322 : 0x000000);
-  daqMat.emissiveIntensity = SYS.run ? .45 + Math.sin(t*3)*.12 : 0;
-
-  updateDashboard();
-  orb.update();
-  renderer.render(scene,cam);
+  ui();
+  controls.update();
+  renderer.render(scene,camera);
 }
-
 animate();
 </script>
 </body>
