@@ -48,7 +48,7 @@ input[type=range]{width:135px;accent-color:#22d3ee}
 
 <div id="title" class="hud">
   <b>GAS TURBINE COMBUSTOR · DIGITAL TWIN v5.0</b><br>
-  Procedural 3D · close industrial side view · no image background
+  
 </div>
 
 <button id="sound" class="hud" onclick="enableSound()">🔊 ENABLE SOUND</button>
@@ -87,7 +87,7 @@ input[type=range]{width:135px;accent-color:#22d3ee}
   <button class="blue" onclick="resetSystem()">↺ RESET</button>
   <div class="slider">
     <span>H₂ BLEND RATIO</span>
-    <input id="blend" type="range" min="0" max="50" value="20" oninput="setBlend(this.value)">
+    <input id="blend" type="range" min="0" max="100" value="20" oninput="setBlend(this.value)">
     <span id="blendText">20 %</span>
   </div>
 </div>
@@ -384,150 +384,63 @@ function updatePS(o,curve,on,speed,t){
   o.geo.attributes.position.needsUpdate=true;
 }
 
-/* ================= CONTINUOUS CONE FLAME BODY ================= */
-/* This flame is not particles, sprites, dots, or stars.
-   It is a deforming cone volume inside the transparent combustor. */
+/* ================= NATURAL CONTINUOUS FLAME PLUME ================= */
+/* Smooth transparent flame sheets. No dots. No stars. No cone-looking solid geometry. */
 
 const flameGroup = new THREE.Group();
 chamber.add(flameGroup);
 
-function makeConeFlame(name, radius, length, color, opacity){
-  const geo = new THREE.ConeGeometry(radius, length, 72, 32, true);
-  geo.rotateZ(-Math.PI / 2);
-  geo.translate(length / 2, 0, 0);
-
-  const base = geo.attributes.position.array.slice();
-
-  const mat = new THREE.MeshBasicMaterial({
-    color,
-    transparent: true,
-    opacity,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.name = name;
-  mesh.userData.base = base;
-  flameGroup.add(mesh);
-
-  return mesh;
-}
-
-/* blue H2 root, yellow/orange main body, red transparent envelope */
-const hydrogenCore = makeConeFlame("hydrogenCore", 0.16, 1.25, 0x55bbff, 0.70);
-const whiteHotCore = makeConeFlame("whiteHotCore", 0.22, 1.65, 0xffffff, 0.42);
-const mainFlame    = makeConeFlame("mainFlame",    0.40, 2.20, 0xffaa22, 0.50);
-const outerFlame   = makeConeFlame("outerFlame",   0.62, 2.55, 0xff3b16, 0.22);
-
-hydrogenCore.position.set(-0.95, 0, 0);
-whiteHotCore.position.set(-0.82, 0, 0);
-mainFlame.position.set(-0.68, 0, 0);
-outerFlame.position.set(-0.62, 0, 0);
-
-/* soft glow cylinder to make flame look like continuous flow */
-const flameGlowMat = new THREE.MeshBasicMaterial({
-  color: 0xff7722,
-  transparent: true,
-  opacity: 0,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-  side: THREE.DoubleSide
-});
-
-const flameGlow = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.42, 0.18, 2.35, 64, 16, true),
-  flameGlowMat
-);
-flameGlow.rotation.z = Math.PI / 2;
-flameGlow.position.set(-0.25, 0, 0);
-flameGroup.add(flameGlow);
-
-/* small transparent turbulence envelopes, still solid surfaces, not points */
-const turbulence = [];
-for(let i = 0; i < 9; i++){
-  const t = makeConeFlame(
-    "turbulence",
-    0.16 + Math.random() * 0.18,
-    0.75 + Math.random() * 0.70,
-    0xff7a22,
-    0.13
-  );
-
-  t.position.set(
-    -0.85 + Math.random() * 1.20,
-    (Math.random() - 0.5) * 0.16,
-    (Math.random() - 0.5) * 0.18
-  );
-
-  t.scale.setScalar(0.75 + Math.random() * 0.45);
-
-  turbulence.push({
-    mesh: t,
-    phase: Math.random() * Math.PI * 2,
-    baseX: t.position.x,
-    baseY: t.position.y,
-    baseZ: t.position.z
-  });
-}
-
-flameGroup.visible = false;
-
-/* front visible flame ribbon: prevents the flame from disappearing behind glass/liner */
-function makeRibbonTexture(kind="mixed"){
+function plumeTexture(mode="kerosene"){
   const c=document.createElement("canvas");
-  c.width=768;
+  c.width=1024;
   c.height=256;
   const ctx=c.getContext("2d");
-
-  const palettes={
-    orange:["rgba(255,255,230,.95)","rgba(255,185,40,.88)","rgba(255,72,16,.70)","rgba(255,30,0,0)"],
-    mixed:["rgba(235,250,255,.95)","rgba(255,205,85,.82)","rgba(255,90,45,.62)","rgba(80,100,255,0)"],
-    blue:["rgba(230,255,255,.95)","rgba(115,210,255,.85)","rgba(100,80,255,.68)","rgba(30,60,255,0)"]
-  };
-  const p=palettes[kind];
-
   ctx.clearRect(0,0,c.width,c.height);
 
-  const body=ctx.createLinearGradient(0,128,768,128);
-  body.addColorStop(0,"rgba(40,120,255,.0)");
-  body.addColorStop(.08,p[1]);
-  body.addColorStop(.25,p[0]);
-  body.addColorStop(.48,p[1]);
-  body.addColorStop(.75,p[2]);
-  body.addColorStop(1,p[3]);
+  const colors={
+    kerosene:["rgba(255,255,235,.95)","rgba(255,190,40,.92)","rgba(255,85,15,.66)","rgba(255,40,0,0)"],
+    blend:["rgba(245,255,255,.95)","rgba(255,210,92,.86)","rgba(255,85,45,.52)","rgba(60,105,255,0)"],
+    hydrogen:["rgba(235,255,255,.96)","rgba(110,215,255,.82)","rgba(92,80,255,.58)","rgba(40,70,255,0)"]
+  }[mode];
+
+  const body=ctx.createLinearGradient(0,128,1024,128);
+  body.addColorStop(0.00,"rgba(50,130,255,0)");
+  body.addColorStop(0.06,colors[1]);
+  body.addColorStop(0.20,colors[0]);
+  body.addColorStop(0.38,colors[1]);
+  body.addColorStop(0.62,colors[2]);
+  body.addColorStop(1.00,colors[3]);
 
   ctx.fillStyle=body;
   ctx.beginPath();
-  ctx.moveTo(20,130);
-  ctx.bezierCurveTo(100,58,220,70,350,104);
-  ctx.bezierCurveTo(470,137,590,80,750,120);
-  ctx.bezierCurveTo(600,185,480,152,360,170);
-  ctx.bezierCurveTo(220,195,90,198,20,130);
+  ctx.moveTo(18,132);
+  ctx.bezierCurveTo(110,52,245,78,365,108);
+  ctx.bezierCurveTo(520,145,685,65,1000,120);
+  ctx.bezierCurveTo(735,190,560,151,385,170);
+  ctx.bezierCurveTo(220,192,85,196,18,132);
   ctx.closePath();
   ctx.fill();
 
-  const core=ctx.createRadialGradient(320,128,6,320,128,260);
-  core.addColorStop(0,"rgba(255,255,255,1)");
-  core.addColorStop(.25,p[0]);
-  core.addColorStop(.55,p[1]);
-  core.addColorStop(1,"rgba(255,255,255,0)");
+  const core=ctx.createRadialGradient(330,128,2,330,128,360);
+  core.addColorStop(0,"rgba(255,255,255,.92)");
+  core.addColorStop(.18,colors[0]);
+  core.addColorStop(.42,colors[1]);
+  core.addColorStop(.84,"rgba(255,255,255,0)");
   ctx.fillStyle=core;
   ctx.beginPath();
-  ctx.ellipse(335,130,310,48,0,0,Math.PI*2);
+  ctx.ellipse(360,130,400,42,0,0,Math.PI*2);
   ctx.fill();
 
-  for(let i=0;i<42;i++){
-    ctx.globalAlpha=.12+Math.random()*.18;
-    ctx.fillStyle=i%2?p[1]:p[2];
+  for(let i=0;i<60;i++){
+    ctx.globalAlpha=.07+Math.random()*.13;
+    ctx.fillStyle=i%2?colors[1]:colors[2];
     ctx.beginPath();
     ctx.ellipse(
-      75+Math.random()*610,
-      96+Math.random()*68,
-      30+Math.random()*70,
-      5+Math.random()*15,
-      (Math.random()-.5)*.55,
+      70+Math.random()*850,
+      92+Math.random()*74,
+      35+Math.random()*90,
+      4+Math.random()*15,
+      (Math.random()-.5)*.45,
       0,
       Math.PI*2
     );
@@ -538,80 +451,64 @@ function makeRibbonTexture(kind="mixed"){
   const tex=new THREE.CanvasTexture(c);
   tex.wrapS=THREE.RepeatWrapping;
   tex.wrapT=THREE.ClampToEdgeWrapping;
+  tex.needsUpdate=true;
   return tex;
 }
 
-const ribbonTextures={
-  low:makeRibbonTexture("orange"),
-  mid:makeRibbonTexture("mixed"),
-  high:makeRibbonTexture("blue")
+const plumeTextures={
+  low:plumeTexture("kerosene"),
+  mid:plumeTexture("blend"),
+  high:plumeTexture("hydrogen")
 };
 
-const flameRibbonMats=[
-  new THREE.MeshBasicMaterial({
-    map:ribbonTextures.mid,
+const flameSheets=[];
+function makeFlameSheet(w,h,z,opacity){
+  const matPlume=new THREE.MeshBasicMaterial({
+    map:plumeTextures.mid,
     transparent:true,
     opacity:0,
     depthTest:false,
     depthWrite:false,
     blending:THREE.AdditiveBlending,
     side:THREE.DoubleSide
-  }),
-  new THREE.MeshBasicMaterial({
-    map:ribbonTextures.mid,
-    transparent:true,
-    opacity:0,
-    depthTest:false,
-    depthWrite:false,
-    blending:THREE.AdditiveBlending,
-    side:THREE.DoubleSide
-  })
-];
+  });
 
-const flameRibbon1=new THREE.Mesh(new THREE.PlaneGeometry(2.05,.34,18,4),flameRibbonMats[0]);
-const flameRibbon2=new THREE.Mesh(new THREE.PlaneGeometry(1.65,.24,18,4),flameRibbonMats[1]);
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h,24,6),matPlume);
+  mesh.position.set(-0.08,0,z);
+  mesh.renderOrder=9999;
+  flameGroup.add(mesh);
 
-flameRibbon1.position.set(-0.18,0.02,0.47);
-flameRibbon2.position.set(-0.32,0.00,0.50);
-
-flameRibbon1.renderOrder=9999;
-flameRibbon2.renderOrder=9999;
-
-flameGroup.add(flameRibbon1);
-flameGroup.add(flameRibbon2);
-
-[hydrogenCore,whiteHotCore,mainFlame,outerFlame,flameGlow,...turbulence.map(t=>t.mesh)].forEach(m=>{
-  m.material.depthTest=false;
-  m.renderOrder=9998;
-});
-
-function deformFlame(mesh, time, strength, waveSpeed){
-  const pos = mesh.geometry.attributes.position;
-  const base = mesh.userData.base;
-
-  for(let i = 0; i < pos.count; i++){
-    const ix = i * 3;
-    const x = base[ix];
-    const y = base[ix + 1];
-    const z = base[ix + 2];
-
-    const progress = Math.max(0, Math.min(1, x / 2.8));
-    const swirl =
-      Math.sin(time * waveSpeed + x * 8.0 + y * 6.0) *
-      Math.cos(time * (waveSpeed * 0.7) + x * 5.0 + z * 7.0);
-
-    const amp = strength * (0.25 + progress);
-
-    pos.array[ix]     = x + Math.sin(time * 4.0 + progress * 9.0) * amp * 0.10;
-    pos.array[ix + 1] = y + swirl * amp;
-    pos.array[ix + 2] = z + Math.cos(time * 5.0 + progress * 10.0) * amp * 0.75;
-  }
-
-  pos.needsUpdate = true;
-  mesh.geometry.computeVertexNormals();
+  flameSheets.push({
+    mesh,
+    baseOpacity:opacity,
+    phase:Math.random()*Math.PI*2,
+    baseZ:z
+  });
 }
 
+makeFlameSheet(2.35,.42,.50,.50);
+makeFlameSheet(2.10,.33,.54,.38);
+makeFlameSheet(1.85,.27,.58,.30);
 
+const flameGlowMat=new THREE.MeshBasicMaterial({
+  color:0xff7722,
+  transparent:true,
+  opacity:0,
+  blending:THREE.AdditiveBlending,
+  depthTest:false,
+  depthWrite:false,
+  side:THREE.DoubleSide
+});
+
+const flameGlow=new THREE.Mesh(
+  new THREE.PlaneGeometry(2.45,.58,18,4),
+  flameGlowMat
+);
+flameGlow.position.set(-0.06,0,.46);
+flameGlow.renderOrder=9998;
+flameGroup.add(flameGlow);
+
+flameGroup.visible=false;
 /* ================= HOT EXHAUST FLAME AFTER NOZZLE ================= */
 const exhaustFlameGroup=new THREE.Group();
 scene.add(exhaustFlameGroup);
@@ -636,9 +533,9 @@ function exhaustLayer(radius,length,color,opacity){
   return mesh;
 }
 
-const exhaustCore=exhaustLayer(.13,1.05,0xb7eaff,.55);
-const exhaustHot=exhaustLayer(.24,1.45,0x7aa8ff,.34);
-const exhaustOuter=exhaustLayer(.38,1.85,0x6b46ff,.20);
+const exhaustCore=exhaustLayer(.10,0.85,0xb7eaff,.38);
+const exhaustHot=exhaustLayer(.18,1.15,0x7aa8ff,.22);
+const exhaustOuter=exhaustLayer(.30,1.55,0x6b46ff,.14);
 
 exhaustCore.position.set(XN+.55,Y,0);
 exhaustHot.position.set(XN+.50,Y,0);
@@ -719,8 +616,8 @@ function updateSensors(){
   if(step>=2)S.t2=lerp(S.t2,444,.018);
   if(step>=3)S.h2f=lerp(S.h2f,.812,.035);
   if(step>=4)S.kf=lerp(S.kf,1.55,.035);
-  if(step>=5){S.t3=lerp(S.t3,1180+h2*4,.015);S.t4=lerp(S.t4,844+h2*.6,.015);S.p2=lerp(S.p2,1.275,.02);S.eff=lerp(S.eff,93.8+h2*.035,.018)}
-  S.alarm=(h2>=45&&step>=6)?"H₂ HIGH":"NORMAL";
+  if(step>=5){S.t3=lerp(S.t3,1080+h2*2.2,.015);S.t4=lerp(S.t4,780+h2*1.05,.015);S.p2=lerp(S.p2,1.275,.02);S.eff=lerp(S.eff,88.5+h2*0.105,.018)}
+  S.alarm=(h2>=80&&step>=6)?"H₂ HIGH":"NORMAL";
 }
 function ui(){
   const status=document.getElementById("status");
@@ -771,92 +668,48 @@ function animate(){
   flameGroup.visible = flameOn;
 
   if(flameOn){
-    const flowPulse = 1 + Math.sin(t * 11) * 0.05;
-    const hotPulse  = 1 + Math.sin(t * 17) * 0.08;
+    let selectedTex = plumeTextures.low;
 
-    deformFlame(hydrogenCore, t, 0.030, 13);
-    deformFlame(whiteHotCore, t, 0.040, 11);
-    deformFlame(mainFlame,    t, 0.055,  9);
-    deformFlame(outerFlame,   t, 0.080,  7);
-
-    hydrogenCore.scale.set(1, hotPulse, hotPulse);
-    whiteHotCore.scale.set(1, 1 + Math.sin(t * 15) * 0.07, 1 + Math.sin(t * 14) * 0.06);
-    mainFlame.scale.set(1, flowPulse, 1 + Math.sin(t * 9) * 0.10);
-    outerFlame.scale.set(1, 1 + Math.sin(t * 7) * 0.12, 1 + Math.sin(t * 8) * 0.16);
-
-    turbulence.forEach((f, i) => {
-      deformFlame(f.mesh, t + f.phase, 0.045, 9);
-      f.mesh.position.x = f.baseX + Math.sin(t * 3.0 + f.phase) * 0.05;
-      f.mesh.position.y = f.baseY + Math.sin(t * 6.0 + f.phase) * 0.055;
-      f.mesh.position.z = f.baseZ + Math.cos(t * 5.0 + f.phase) * 0.055;
-      f.mesh.scale.y = 0.85 + Math.sin(t * 10.0 + f.phase) * 0.18;
-      f.mesh.material.opacity = 0.10 + Math.sin(t * 8.0 + f.phase) * 0.04;
-    });
-
-    let selectedRibbonTex = ribbonTextures.low;
-    if(h2 >= 40) selectedRibbonTex = ribbonTextures.high;
-    else if(h2 >= 15) selectedRibbonTex = ribbonTextures.mid;
-
-    flameRibbonMats.forEach((m,idx)=>{
-      m.map=selectedRibbonTex;
-      m.map.offset.x=(t*(0.55+idx*.18))%1;
-      m.opacity=(idx===0?0.48:0.36)+Math.sin(t*(10+idx*3))*0.06;
-    });
-
-    flameRibbon1.position.y=0.02+Math.sin(t*9)*0.035;
-    flameRibbon1.position.z=0.50+Math.cos(t*5)*0.018;
-    flameRibbon1.scale.x=1.0+Math.sin(t*4)*0.04;
-    flameRibbon1.scale.y=1.0+Math.sin(t*8)*0.16;
-
-    flameRibbon2.position.y=Math.sin(t*11+1.2)*0.03;
-    flameRibbon2.position.z=0.54+Math.sin(t*6)*0.018;
-    flameRibbon2.scale.x=1.0+Math.sin(t*5+1.5)*0.05;
-    flameRibbon2.scale.y=1.0+Math.sin(t*9+1.5)*0.18;
-
-    if(h2 < 15){
-      hydrogenCore.material.color.set(0x4da8ff);
-      whiteHotCore.material.color.set(0xffffff);
-      mainFlame.material.color.set(0xffb32b);
-      outerFlame.material.color.set(0xff3b16);
-      flameGlowMat.color.set(0xff6a1a);
-      turbulence.forEach(f => f.mesh.material.color.set(0xff7a22));
-      flameLight.color.set(0xff6a1a);
-    }else if(h2 < 40){
-      hydrogenCore.material.color.set(0x6fc8ff);
-      whiteHotCore.material.color.set(0xf5fbff);
-      mainFlame.material.color.set(0xff8d32);
-      outerFlame.material.color.set(0x7c4dff);
+    if(h2 >= 70){
+      selectedTex = plumeTextures.high;
+      flameGlowMat.color.set(0x6688ff);
+      flameLight.color.set(0x73b7ff);
+    }else if(h2 >= 35){
+      selectedTex = plumeTextures.mid;
       flameGlowMat.color.set(0xff7744);
-      turbulence.forEach(f => f.mesh.material.color.set(0xaa62ff));
       flameLight.color.set(0xff8844);
     }else{
-      hydrogenCore.material.color.set(0x72d8ff);
-      whiteHotCore.material.color.set(0xcceeff);
-      mainFlame.material.color.set(0x638cff);
-      outerFlame.material.color.set(0x5734ff);
-      flameGlowMat.color.set(0x6688ff);
-      turbulence.forEach(f => f.mesh.material.color.set(0x6b46ff));
-      flameLight.color.set(0x73b7ff);
+      selectedTex = plumeTextures.low;
+      flameGlowMat.color.set(0xff6a1a);
+      flameLight.color.set(0xff661a);
     }
 
-    hydrogenCore.material.opacity = 0.62 + Math.sin(t * 18) * 0.10;
-    whiteHotCore.material.opacity = 0.24 + Math.sin(t * 15) * 0.06;
-    mainFlame.material.opacity    = 0.34 + Math.sin(t * 12) * 0.06;
-    outerFlame.material.opacity   = 0.16 + Math.sin(t * 10) * 0.04;
-    flameGlowMat.opacity         = 0.12 + Math.sin(t * 12) * 0.04;
+    flameSheets.forEach((f,idx)=>{
+      const m=f.mesh.material;
+      m.map=selectedTex;
+      m.map.offset.x=(t*(0.42+idx*.13))%1;
+      m.opacity=f.baseOpacity + Math.sin(t*(7+idx*2)+f.phase)*0.07;
 
-    flameLight.intensity = step >= 6 ? 4.2 + Math.sin(t * 12) * 0.7 : 2.0 + Math.sin(t * 16) * 0.5;
+      f.mesh.position.y=Math.sin(t*(7.5+idx)+f.phase)*0.035;
+      f.mesh.position.z=f.baseZ+Math.cos(t*(4.8+idx)+f.phase)*0.018;
+
+      f.mesh.scale.x=1.00+Math.sin(t*(3.5+idx)+f.phase)*0.035;
+      f.mesh.scale.y=1.00+Math.sin(t*(6.5+idx)+f.phase)*0.12;
+
+      f.mesh.lookAt(camera.position);
+    });
+
+    flameGlow.material.opacity=0.16+Math.sin(t*9)*0.04;
+    flameGlow.position.y=Math.sin(t*8)*0.025;
+    flameGlow.scale.y=1+Math.sin(t*10)*0.10;
+    flameGlow.lookAt(camera.position);
+
+    flameLight.intensity=step>=6?3.6+Math.sin(t*12)*0.55:1.8+Math.sin(t*16)*0.45;
   }else{
-    flameLight.intensity = Math.max(0, flameLight.intensity - 0.08);
-    hydrogenCore.material.opacity *= 0.88;
-    whiteHotCore.material.opacity *= 0.88;
-    mainFlame.material.opacity *= 0.88;
-    outerFlame.material.opacity *= 0.88;
-    flameGlowMat.opacity *= 0.88;
-    turbulence.forEach(f => f.mesh.material.opacity *= 0.88);
-    flameRibbonMats.forEach(m=>m.opacity*=0.88);
+    flameLight.intensity=Math.max(0,flameLight.intensity-.08);
+    flameSheets.forEach(f=>f.mesh.material.opacity*=0.88);
+    flameGlowMat.opacity*=0.88;
   }
-
 
   const exhaustOn=step>=6;
   exhaustFlameGroup.visible=exhaustOn;
@@ -871,12 +724,12 @@ function animate(){
     exhaustHot.scale.set(1,1+Math.sin(t*10)*.09,1+Math.sin(t*11)*.10);
     exhaustOuter.scale.set(1,1+Math.sin(t*8)*.13,1+Math.sin(t*7)*.16);
 
-    if(h2<15){
+    if(h2<35){
       exhaustCore.material.color.set(0xffe2aa);
       exhaustHot.material.color.set(0xff8844);
       exhaustOuter.material.color.set(0x8b5cf6);
       exhaustGlowMat.color.set(0xff7a33);
-    }else if(h2<40){
+    }else if(h2<70){
       exhaustCore.material.color.set(0xdff8ff);
       exhaustHot.material.color.set(0x93c5fd);
       exhaustOuter.material.color.set(0x8b5cf6);
@@ -888,10 +741,10 @@ function animate(){
       exhaustGlowMat.color.set(0x6688ff);
     }
 
-    exhaustCore.material.opacity=.46+Math.sin(t*14)*.08;
-    exhaustHot.material.opacity=.30+Math.sin(t*12)*.06;
-    exhaustOuter.material.opacity=.18+Math.sin(t*10)*.05;
-    exhaustGlowMat.opacity=.12+Math.sin(t*9)*.04;
+    exhaustCore.material.opacity=.32+Math.sin(t*14)*.05;
+    exhaustHot.material.opacity=.20+Math.sin(t*12)*.04;
+    exhaustOuter.material.opacity=.12+Math.sin(t*10)*.03;
+    exhaustGlowMat.opacity=.08+Math.sin(t*9)*.025;
   }else{
     exhaustCore.material.opacity*=.88;
     exhaustHot.material.opacity*=.88;
@@ -908,7 +761,7 @@ function animate(){
   wireMats.forEach((m,i)=>m.emissiveIntensity=step>=6?.25+Math.sin(t*4+i)*.22:0);
   swMats.forEach((m,i)=>m.color.setHex(step>i?0x00aa55:0x334455));
   daqMat.emissive.setHex(step>=6?0x003322:0x000000); daqMat.emissiveIntensity=step>=6?.45+Math.sin(t*3)*.12:0;
-  alG.emissiveIntensity=step>=6&&h2<45?1.1:.25; alY.emissiveIntensity=step>=6&&h2>=45?1.2+Math.sin(t*5)*.4:0; alR.emissiveIntensity=0;
+  alG.emissiveIntensity=step>=6&&h2<45?1.1:.25; alY.emissiveIntensity=step>=6&&h2>=80?1.2+Math.sin(t*5)*.4:0; alR.emissiveIntensity=0;
 
   ui();
   controls.update();
